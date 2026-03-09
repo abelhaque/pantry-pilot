@@ -1,0 +1,77 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Playfair Display", ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+  
+  --color-primary: #8DAA81;
+  --color-secondary: #5DADE2;
+  --color-accent: #B08D57;
+  --color-off-white: #FDFDFB;
+  --color-charcoal: #2C3A2B;
+  --color-sage-light: #E3EADF;
+  
+  --shadow-soft: 0 10px 30px rgba(0,0,0,0.05);
+  --radius-xl: 20px;
+}
+
+@layer utilities {
+  .tactile-card {
+    background: linear-gradient(to bottom, #FDFDFB, #F8F8F0);
+    border: 1px solid #F0F0E8;
+    box-shadow: 
+      6px 6px 15px rgba(44, 58, 43, 0.12), 
+      -4px -4px 15px rgba(255, 255, 255, 0.7);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .tactile-card:active {
+    transform: scale(0.98);
+    box-shadow: 
+      2px 2px 8px rgba(44, 58, 43, 0.1), 
+      -2px -2px 8px rgba(255, 255, 255, 0.6);
+  }
+
+  .tactile-button {
+    box-shadow: 
+      4px 4px 10px rgba(44, 58, 43, 0.15), 
+      -2px -2px 10px rgba(255, 255, 255, 0.5);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .tactile-button:active {
+    transform: scale(0.98);
+    box-shadow: 
+      1px 1px 4px rgba(44, 58, 43, 0.1), 
+      -1px -1px 4px rgba(255, 255, 255, 0.4);
+  }
+}
+
+@layer base {
+  body {
+    background-color: #E3EADF !important;
+    @apply text-charcoal antialiased font-sans;
+  }
+
+  input[type="date"]::-webkit-calendar-picker-indicator {
+    background: transparent;
+    bottom: 0;
+    color: transparent;
+    cursor: pointer;
+    height: auto;
+    left: 0;
+    position: absolute;
+    right: 0;
+    top: 0;
+    width: auto;
+  }
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}

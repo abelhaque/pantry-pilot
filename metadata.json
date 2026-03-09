@@ -1,0 +1,5 @@
+{
+  "name": "Pantry Pilot",
+  "description": "A collaborative kitchen logistics engine for tracking inventory, expiry dates, and shopping lists across a household.",
+  "requestFramePermissions": ["microphone"]
+}
