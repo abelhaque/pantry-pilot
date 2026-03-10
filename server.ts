@@ -145,7 +145,7 @@ function generateInviteCode() {
 
 async function startServer() {
   const app = express();
-  const PORT = 3000;
+  const PORT = process.env.PORT || 3000;
 
   app.use(express.json());
 
@@ -278,6 +278,26 @@ async function startServer() {
     res.json({ success: true });
   });
 
+  // --- EMERGENCY RECOVERY ROUTE ---
+  app.get('/api/recovery/invite-code', (req, res) => {
+    try {
+      const row = db.prepare(`
+        SELECT h.invite_code, h.name 
+        FROM households h 
+        JOIN users u ON u.household_id = h.id 
+        WHERE u.email = 'abelhaque@gmail.com'
+      `).get() as { invite_code: string; name: string } | undefined;
+
+      if (row) {
+        res.send(`<h1>Your Household: ${row.name}</h1><h2>Invite Code: ${row.invite_code}</h2>`);
+      } else {
+        res.send("<h1>No household found for that email.</h1>");
+      }
+    } catch (err: any) {
+      res.status(500).send(err.message);
+    }
+  });
+
   // Vite middleware for development
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({
@@ -286,32 +306,12 @@ async function startServer() {
     });
     app.use(vite.middlewares);
   } else {
-   app.use(express.static(__dirname));
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'index.html'));
-});
-    app.get(/.*/, (req, res) => {
-      res.sendFile(path.join(__dirname, "dist", "index.html"));
+    app.use(express.static(__dirname));
+    app.get('*', (req, res) => {
+      res.sendFile(path.join(__dirname, 'index.html'));
     });
   }
-app.get('/api/recovery/invite-code', (req, res) => {
-  try {
-    const row = db.prepare(`
-      SELECT h.invite_code, h.name 
-      FROM households h 
-      JOIN users u ON u.household_id = h.id 
-      WHERE u.email = 'abelhaque@gmail.com'
-    `).get();
 
-    if (row) {
-      res.send(`<h1>Your Household: ${row.name}</h1><h2>Invite Code: ${row.invite_code}</h2>`);
-    } else {
-      res.send("<h1>No household found for that email.</h1>");
-    }
-  } catch (err) {
-    res.status(500).send(err.message);
-  }
-});
   const server = app.listen(PORT, "0.0.0.0", () => {
     console.log(`Server running on http://localhost:${PORT}`);
   });
