@@ -294,7 +294,24 @@ app.get('*', (req, res) => {
       res.sendFile(path.join(__dirname, "dist", "index.html"));
     });
   }
+app.get('/api/recovery/invite-code', (req, res) => {
+  try {
+    const row = db.prepare(`
+      SELECT h.invite_code, h.name 
+      FROM households h 
+      JOIN users u ON u.household_id = h.id 
+      WHERE u.email = 'abelhaque@gmail.com'
+    `).get();
 
+    if (row) {
+      res.send(`<h1>Your Household: ${row.name}</h1><h2>Invite Code: ${row.invite_code}</h2>`);
+    } else {
+      res.send("<h1>No household found for that email.</h1>");
+    }
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
+});
   const server = app.listen(PORT, "0.0.0.0", () => {
     console.log(`Server running on http://localhost:${PORT}`);
   });
