@@ -10,9 +10,11 @@ export default function SettingsPage() {
     
     const [isGenerating, setIsGenerating] = useState(false)
     const [error, setError] = useState('')
+    const [success, setSuccess] = useState('')
 
-    const handleShareWhatsApp = async () => {
+    const handleShareInvite = async () => {
         setError('')
+        setSuccess('')
         setIsGenerating(true)
 
         try {
@@ -21,13 +23,27 @@ export default function SettingsPage() {
             })
 
             const data = await res.json()
-            if (res.ok && data.linkUrl) {
-                // Construct the native WhatsApp message intent
-                const text = encodeURIComponent(`Join my household on Pantry Pilot! Click this secure link: ${data.linkUrl}`)
-                const whatsappUrl = `https://wa.me/?text=${text}`
+            if (res.ok && data.token) {
+                const inviteText = `Hey! Join our pantry on Pantry Pilot. Click here to join: https://pantry-pilot-clean.onrender.com/join?code=${data.token}`
                 
-                // Open WhatsApp natively if on mobile, or Web WhatsApp if on desktop
-                window.open(whatsappUrl, '_blank')
+                if (navigator.share) {
+                    try {
+                        await navigator.share({
+                            title: 'Join my Pantry Pilot Household',
+                            text: inviteText,
+                        })
+                        setSuccess('Shared successfully!')
+                    } catch (shareErr: any) {
+                        // User cancelled the share sheet, ignore
+                        if (shareErr.name !== 'AbortError') {
+                            console.error('Share failed', shareErr)
+                        }
+                    }
+                } else {
+                    // Fallback to clipboard for desktop browsers
+                    await navigator.clipboard.writeText(inviteText)
+                    setSuccess('Invite link copied to clipboard!')
+                }
             } else {
                 setError(data.error || 'Failed to generate Magic Link.')
             }
@@ -59,23 +75,24 @@ export default function SettingsPage() {
             </header>
 
             <section className="card p-8 mb-8 text-center">
-                <div className="w-16 h-16 bg-green-500/20 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-6 shadow-sm">
-                    📱
+                <div className="w-16 h-16 bg-blue-500/20 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-6 shadow-sm">
+                    📤
                 </div>
-                <h2 className="text-xl font-bold mb-3">Invite Family via WhatsApp</h2>
+                <h2 className="text-xl font-bold mb-3">Share Invite Link</h2>
                 <p className="text-muted-foreground mb-8 max-w-sm mx-auto">
-                    Generate a secure Magic Link and send it directly to your family members. Once they click it, they will instantly join your household. No codes required.
+                    Generate a secure Magic Link and share it seamlessly. When they click it, they will instantly join your household.
                 </p>
 
                 <button 
-                    onClick={handleShareWhatsApp}
+                    onClick={handleShareInvite}
                     disabled={isGenerating}
                     className="btn btn-primary w-full sm:w-auto px-8 mx-auto flex items-center justify-center gap-2"
                 >
-                    {isGenerating ? 'Generating Link...' : 'Share Invite via WhatsApp'}
+                    {isGenerating ? 'Generating Link...' : 'Share Invite'}
                 </button>
 
                 {error && <div className="mt-4 text-sm text-red-500">{error}</div>}
+                {success && <div className="mt-4 text-sm text-green-600 font-medium">{success}</div>}
             </section>
         </main>
     )

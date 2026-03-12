@@ -30,12 +30,7 @@ export async function POST(request: Request) {
             }
         })
 
-        // Build the full URL
-        const protocol = process.env.NODE_ENV === 'production' ? 'https' : 'http'
-        const host = request.headers.get('host') || 'localhost:3000'
-        const linkUrl = `${protocol}://${host}/join/${magicLink.token}`
-
-        return NextResponse.json({ success: true, linkUrl })
+        return NextResponse.json({ success: true, token: magicLink.token })
 
     } catch (error) {
         console.error('API Error:', error)
