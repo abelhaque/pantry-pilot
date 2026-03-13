@@ -23,23 +23,20 @@ export default function LoginPage() {
         setIsLoading(true)
 
         try {
-            const res = await fetch('/api/auth', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email }),
+            const { createClient } = await import('@/utils/supabase/client')
+            const supabase = createClient()
+            
+            const { error: authError } = await supabase.auth.signInWithOtp({
+                email,
+                options: {
+                    emailRedirectTo: `${window.location.origin}/auth/callback`,
+                },
             })
 
-            const data = await res.json()
-
-            if (res.ok && data.user) {
-                await refresh()
-                if (data.isNewUser) {
-                    router.push('/welcome')
-                } else {
-                    router.push('/')
-                }
+            if (authError) {
+                setError(authError.message)
             } else {
-                setError(data.error || 'Failed to login.')
+                alert('Check your email for the login link!')
             }
         } catch (err) {
             setError('An unexpected error occurred.')
