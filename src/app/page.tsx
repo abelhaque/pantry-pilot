@@ -1,232 +1,198 @@
 'use client'
 
 import { useHousehold } from '@/providers/HouseholdProvider'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { CATEGORIES } from '@/utils/categories'
-import { Item } from '@/types'
 import * as LucideIcons from 'lucide-react'
-
-// Dynamic Icon Component
-const IconRenderer = ({ name, className }: { name: string; className?: string }) => {
-  const IconComponent = (LucideIcons as any)[name] || LucideIcons.Package
-  return <IconComponent className={className} size={20} />
-}
-
+import { Search, Package, ShoppingCart, Clock, AlertTriangle, Snowflake, Box, Archive, Edit3, Settings } from 'lucide-react'
 import { ShoppingBags } from '@/components/ShoppingBags'
-import { useEffect } from 'react'
 
 export default function Dashboard() {
-  const { household, isLoading, createLocation } = useHousehold()
-  const router = useRouter()
-  const [isAdding, setIsAdding] = useState(false)
-  const [newLocName, setNewLocName] = useState('')
-  const [newLocType, setNewLocType] = useState('pantry')
-  const [shoppingListCount, setShoppingListCount] = useState(0)
+    const { household, isLoading } = useHousehold()
+    const router = useRouter()
+    
+    const [searchQuery, setSearchQuery] = useState('')
+    const [shoppingListCount, setShoppingListCount] = useState(0)
+    const [isEditingNames, setIsEditingNames] = useState(false)
+    const [editedNames, setEditedNames] = useState<Record<string, string>>({})
 
-  const fetchShoppingListCount = async () => {
-    if (!household) return
-    const res = await fetch(`/api/shopping-list?householdId=${household.id}`)
-    if (res.ok) {
-      const data = await res.json()
-      setShoppingListCount(data.filter((i: any) => !i.isPurchased).length)
+    const fetchShoppingListCount = async () => {
+        if (!household) return
+        const res = await fetch(`/api/shopping-list?householdId=${household.id}`)
+        if (res.ok) {
+            const data = await res.json()
+            setShoppingListCount(data.filter((i: any) => !i.isPurchased).length)
+        }
     }
-  }
 
-  useEffect(() => {
-    fetchShoppingListCount()
-  }, [household])
+    useEffect(() => {
+        fetchShoppingListCount()
+    }, [household])
 
-  if (isLoading) {
-    return <div className="flex items-center justify-center min-h-screen text-[#2C3A2B] font-bold">Loading Pantry Pilot...</div>
-  }
-
-  if (!household) {
-    return <div className="p-8 text-center bg-white/10 min-h-screen">
-      <h1 className="text-xl font-bold mb-4 text-white">No Household Found</h1>
-      <button onClick={() => router.push('/login')} className="btn bg-white text-[#8DAA81]">Go to Login</button>
-    </div>
-  }
-
-  // ... (rest of the logic remains the same for filtering items)
-  const allItems = household.locations.flatMap(loc => 
-    loc.zones.flatMap(zone => zone.items)
-  )
-
-  const itemsByCategory = allItems.reduce((acc, item) => {
-    const cat = item.category || 'Other'
-    if (!acc[cat]) {
-      acc[cat] = []
+    if (isLoading) {
+        return <div className="flex items-center justify-center min-h-screen text-[#2C3A2B] font-black uppercase tracking-widest animate-pulse">Loading Intelligence...</div>
     }
-    acc[cat].push(item)
-    return acc
-  }, {} as Record<string, typeof allItems>)
 
-  const sortedCategories = CATEGORIES.map(cat => ({
-    ...cat,
-    items: itemsByCategory[cat.name] || []
-  })).sort((a, b) => b.items.length - a.items.length || a.name.localeCompare(b.name))
+    if (!household) return null
 
-  const handleCreateLoc = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!newLocName) return
-    await createLocation(newLocName, newLocType)
-    setIsAdding(false)
-    setNewLocName('')
-  }
+    const allItems = household.locations.flatMap(loc => 
+        loc.zones.flatMap(zone => zone.items)
+    )
 
-  return (
-    <main className="container min-h-screen py-8">
-      <header className="mb-8 flex items-center justify-between px-2">
-        <div className="flex items-center gap-3">
-           <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-           <span className="text-[10px] font-bold uppercase tracking-widest text-[#2C3A2B]/60">Live Sync</span>
-        </div>
-        <div className="flex items-center gap-4">
-          <LucideIcons.Settings 
-            size={20} 
-            className="text-[#2C3A2B]/60 cursor-pointer hover:text-[#2C3A2B] transition-colors" 
-            onClick={() => router.push('/household/settings')}
-          />
-          <LucideIcons.LogOut size={20} className="text-[#2C3A2B]/60" />
-        </div>
-      </header>
+    // Derived Stats
+    const expiringSoonCount = allItems.filter(item => {
+        if (!item.expiry) return false
+        const daysToExpiry = (new Date(item.expiry).getTime() - new Date().getTime()) / (1000 * 3600 * 24)
+        return daysToExpiry >= 0 && daysToExpiry <= 3
+    }).length
 
-      <section className="mb-10 px-2">
-        <h1 className="text-4xl font-black text-[#2C3A2B] mb-1">{household.name}</h1>
-        <p className="text-sm font-bold text-[#2C3A2B]/40 uppercase tracking-widest">Household Dashboard</p>
-      </section>
+    const lowStockCount = allItems.filter(item => item.quantity <= 1).length
 
-      {/* Stats Section */}
-      <section className="grid grid-cols-2 gap-4 mb-8 px-2">
-        <div className="card p-6 bg-white/20 border-none backdrop-blur-sm">
-          <div className="text-3xl font-black text-[#2C3A2B]">{allItems.length}</div>
-          <div className="text-[10px] font-bold uppercase tracking-widest text-[#2C3A2B]/50">Total Items</div>
-        </div>
-        <div 
-          onClick={() => router.push('/shopping-list')}
-          className="card p-6 bg-white/20 border-none backdrop-blur-sm cursor-pointer hover:bg-white/40 transition-all"
-        >
-          <div className="text-3xl font-black text-[#2C3A2B]">{shoppingListCount}</div>
-          <div className="text-[10px] font-bold uppercase tracking-widest text-[#2C3A2B]/50">To Buy</div>
-        </div>
-      </section>
+    // Storage Unit Helpers
+    const getIconForType = (type: string) => {
+        switch (type.toLowerCase()) {
+            case 'fridge': return <Snowflake size={28} />
+            case 'freezer': return <Snowflake size={28} className="text-blue-400" />
+            case 'cupboard': return <Box size={28} />
+            default: return <Archive size={28} />
+        }
+    }
 
-      {/* Shopping Bags Integration */}
-      <section className="mb-10 px-2" onClick={() => router.push('/shopping-list')}>
-        <ShoppingBags itemCount={shoppingListCount} />
-      </section>
+    const handleUpdateName = async (locId: string, newName: string) => {
+        // Optimistic update
+        setEditedNames(prev => ({ ...prev, [locId]: newName }))
+        // In a real app, you'd send this to an API
+        // await fetch(`/api/locations/${locId}`, { method: 'PATCH', body: JSON.stringify({ name: newName }) })
+    }
 
-      {/* Storage Units */}
-      <section className="mb-12 px-2">
-          <div className="flex items-center justify-between mb-4">
-              <h2 className="text-[10px] font-bold uppercase tracking-widest text-[#2C3A2B]/40">Storage Units</h2>
-              <button 
-                  onClick={() => setIsAdding(!isAdding)}
-                  className="text-[#2C3A2B] text-xs font-bold hover:underline"
-              >
-                  {isAdding ? 'Cancel' : '+ Add Unit'}
-              </button>
-          </div>
+    // Standard Grid Items (Fridge, Freezer, Cupboard, Other)
+    const storageTypes = ['fridge', 'freezer', 'cupboard', 'other']
+    const mainLocations = storageTypes.map(type => {
+        const found = household.locations.find(l => l.type.toLowerCase() === type)
+        return found || { id: `new-${type}`, name: type.charAt(0).toUpperCase() + type.slice(1), type, zones: [] }
+    })
 
-          <div className="flex gap-4 overflow-x-auto pb-6 hide-scrollbar">
-            {household.locations.map(loc => (
-                <button 
-                  key={loc.id} 
-                  onClick={() => router.push(`/location/${loc.id}`)}
-                  className="card p-6 min-w-[160px] flex flex-col items-center gap-4 bg-white/40 border-none backdrop-blur-sm hover:scale-105 transition-all"
-                >
-                    <div className="text-4xl">
-                      {loc.type === 'fridge' ? '❄️' : loc.type === 'freezer' ? '🧊' : '📦'}
+    return (
+        <main className="container min-h-screen py-8 pb-32 animate-in fade-in duration-700">
+            {/* 1. Top Section: Prominent Search Pantry Bar */}
+            <header className="mb-10 px-2">
+                <div className="relative group">
+                    <input
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        placeholder="Search Pantry..."
+                        className="w-full h-18 pl-14 pr-6 rounded-[2rem] bg-white/40 border-none text-[#2C3A2B] placeholder-[#2C3A2B]/40 font-bold shadow-xl shadow-[#2C3A2B]/5 backdrop-blur-md focus:ring-4 focus:ring-[#8DAA81]/20 transition-all outline-none"
+                    />
+                    <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-[#2C3A2B]/40" size={24} />
+                    <div className="absolute right-5 top-1/2 -translate-y-1/2 flex items-center gap-2">
+                        <Settings 
+                            size={20} 
+                            className="text-[#2C3A2B]/40 cursor-pointer hover:text-[#2C3A2B] transition-colors" 
+                            onClick={() => router.push('/household/settings')}
+                        />
                     </div>
-                    <span className="font-black text-xs uppercase tracking-tight text-[#2C3A2B]">{loc.name}</span>
-                </button>
-            ))}
-          </div>
-
-          {isAdding && (
-          <form onSubmit={handleCreateLoc} className="card mt-2 p-8 bg-white/60 border-none backdrop-blur-md animate-in slide-in-from-top-4">
-            <h3 className="text-xs font-black mb-6 uppercase tracking-widest text-[#2C3A2B]">New Storage Unit</h3>
-            <div className="space-y-4">
-              <input
-                value={newLocName}
-                onChange={(e) => setNewLocName(e.target.value)}
-                placeholder="Name (e.g. Garage Freezer)"
-                className="w-full h-14 px-6 rounded-2xl bg-white/50 border-none text-[#2C3A2B] font-bold outline-none"
-                autoFocus
-              />
-              <div className="flex gap-3">
-                  <select
-                    value={newLocType}
-                    onChange={(e) => setNewLocType(e.target.value)}
-                    className="flex-1 h-14 px-6 rounded-2xl bg-white/50 border-none text-[#2C3A2B] font-bold outline-none"
-                  >
-                    <option value="fridge">Fridge</option>
-                    <option value="freezer">Freezer</option>
-                    <option value="pantry">Pantry</option>
-                    <option value="other">Other</option>
-                  </select>
-                  <button type="submit" className="h-14 px-8 bg-[#2C3A2B] text-white font-black rounded-2xl">
-                    Create
-                  </button>
-              </div>
-            </div>
-          </form>
-        )}
-      </section>
-
-      {/* Inventory Search */}
-      <section className="mb-10 px-2">
-        <div className="relative group">
-            <input
-                placeholder="Explore Pantry..."
-                className="w-full h-16 pl-14 pr-6 rounded-3xl bg-white/20 border-none text-[#2C3A2B] placeholder-[#2C3A2B]/30 font-bold focus:ring-4 focus:ring-[#2C3A2B]/5 transition-all outline-none"
-            />
-            <LucideIcons.Search className="absolute left-5 top-1/2 -translate-y-1/2 text-[#2C3A2B]/30" size={24} />
-        </div>
-      </section>
-
-      {/* Inventory by Aisle */}
-      <section className="px-2">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-[10px] font-bold uppercase tracking-widest text-[#2C3A2B]/40">Inventory by Aisle</h2>
-        </div>
-
-        <div className="space-y-4">
-            {sortedCategories.map((category) => (
-                <div key={category.name} className={`card border-none bg-white/40 p-0 overflow-hidden ${category.items.length === 0 ? 'opacity-30' : ''}`}>
-                    <div className="p-5 flex items-center justify-between">
-                        <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 rounded-2xl bg-white flex items-center justify-center shadow-sm text-[#2C3A2B]">
-                                <IconRenderer name={category.icon} />
-                            </div>
-                            <div>
-                                <h3 className="font-black text-sm uppercase tracking-tight text-[#2C3A2B]">{category.name}</h3>
-                                <p className="text-[10px] font-bold text-[#2C3A2B]/40 uppercase tracking-widest">{category.items.length} items</p>
-                            </div>
-                        </div>
-                    </div>
-                    {category.items.length > 0 && (
-                        <div className="bg-white/30 divide-y divide-black/5">
-                            {category.items.map((item: Item) => (
-                                <div key={item.id} className="p-5 flex justify-between items-center hover:bg-white/20 transition-colors">
-                                    <div className="flex flex-col">
-                                        <span className="font-bold text-[#2C3A2B]">{item.name}</span>
-                                        <span className="text-[9px] font-bold text-[#2C3A2B]/30 uppercase tracking-widest">
-                                            {household.locations.find(l => l.zones.some(z => z.id === item.zoneId))?.name}
-                                        </span>
-                                    </div>
-                                    <div className="text-right">
-                                        <div className="text-sm font-black text-[#2C3A2B]">{item.quantity} <span className="text-[10px] font-bold text-[#2C3A2B]/40">{item.unit}</span></div>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    )}
                 </div>
-            ))}
-        </div>
-      </section>
-    </main>
-  )
+            </header>
+
+            {/* 2. Stat Buttons: Side-by-Side Tablet Buttons */}
+            <div className="flex gap-4 mb-10 px-2">
+                <button className="flex-1 h-12 bg-white/40 backdrop-blur-md rounded-full flex items-center justify-between px-6 active:scale-95 transition-all shadow-sm group">
+                    <div className="flex items-center gap-3">
+                        <Clock size={16} className="text-[#2C3A2B]/40 group-hover:text-red-500 transition-colors" />
+                        <span className="text-[10px] font-black uppercase tracking-wider text-[#2C3A2B]">Expiring</span>
+                    </div>
+                    <span className="px-2.5 py-0.5 rounded-full bg-red-100 text-red-600 text-[10px] font-black">{expiringSoonCount}</span>
+                </button>
+                <button className="flex-1 h-12 bg-white/40 backdrop-blur-md rounded-full flex items-center justify-between px-6 active:scale-95 transition-all shadow-sm group">
+                    <div className="flex items-center gap-3">
+                        <AlertTriangle size={16} className="text-[#2C3A2B]/40 group-hover:text-amber-500 transition-colors" />
+                        <span className="text-[10px] font-black uppercase tracking-wider text-[#2C3A2B]">Low Stock</span>
+                    </div>
+                    <span className="px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-600 text-[10px] font-black">{lowStockCount}</span>
+                </button>
+            </div>
+
+            {/* 3. Main Summary Cards: Large High-Contrast */}
+            <section className="grid grid-cols-2 gap-5 mb-10 px-2">
+                <div className="card aspect-square bg-[#2C3A2B] text-white p-8 flex flex-col justify-between active:scale-95 transition-all shadow-2xl shadow-[#2C3A2B]/20 rounded-[2.5rem]">
+                    <div className="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center">
+                        <Package size={24} />
+                    </div>
+                    <div>
+                        <div className="text-5xl font-black mb-1">{allItems.length}</div>
+                        <div className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40">Total Inventory</div>
+                    </div>
+                </div>
+                <div 
+                    onClick={() => router.push('/shopping-list')}
+                    className="card aspect-square bg-[#8DAA81] text-white p-8 flex flex-col justify-between active:scale-95 transition-all shadow-2xl shadow-[#8DAA81]/20 rounded-[2.5rem] cursor-pointer"
+                >
+                    <div className="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center">
+                        <ShoppingCart size={24} />
+                    </div>
+                    <div>
+                        <div className="text-5xl font-black mb-1">{shoppingListCount}</div>
+                        <div className="text-[10px] font-black uppercase tracking-[0.2em] text-white/60">Shopping List</div>
+                    </div>
+                </div>
+            </section>
+
+            {/* 4. Storage Grid */}
+            <section className="space-y-5 px-2">
+                {/* Row 1: Full-width Shopping Bags */}
+                <div 
+                    onClick={() => router.push('/shopping-list')}
+                    className="active:scale-[0.98] transition-all"
+                >
+                    <ShoppingBags itemCount={shoppingListCount} />
+                </div>
+
+                {/* Rows 2 & 3: GRID of 4 Cards */}
+                <div className="grid grid-cols-2 gap-5">
+                    {mainLocations.map((loc) => (
+                        <div 
+                            key={loc.id}
+                            className="relative group h-48"
+                        >
+                            <div 
+                                onClick={() => loc.id.startsWith('new-') ? null : router.push(`/location/${loc.id}`)}
+                                className={`card h-full p-6 flex flex-col justify-between bg-white/60 border-none backdrop-blur-md shadow-lg shadow-[#2C3A2B]/5 active:scale-95 transition-all cursor-pointer rounded-[2rem] border-b-4 border-b-[#2C3A2B]/5`}
+                            >
+                                <div className="flex justify-between items-start">
+                                    <div className="w-12 h-12 rounded-2xl bg-[#2C3A2B]/5 flex items-center justify-center text-[#2C3A2B]">
+                                        {getIconForType(loc.type)}
+                                    </div>
+                                    <button 
+                                        onClick={(e) => { e.stopPropagation(); setIsEditingNames(!isEditingNames) }}
+                                        className="p-2 text-[#2C3A2B]/20 hover:text-[#2C3A2B] transition-colors"
+                                    >
+                                        <Edit3 size={14} />
+                                    </button>
+                                </div>
+                                
+                                <div>
+                                    {isEditingNames ? (
+                                        <input 
+                                            autoFocus
+                                            className="bg-transparent font-black text-sm uppercase tracking-tight text-[#2C3A2B] border-b border-[#2C3A2B]/20 outline-none w-full"
+                                            defaultValue={editedNames[loc.id] || loc.name}
+                                            onBlur={(e) => { handleUpdateName(loc.id, e.target.value); setIsEditingNames(false) }}
+                                            onClick={(e) => e.stopPropagation()}
+                                        />
+                                    ) : (
+                                        <h3 className="font-black text-sm uppercase tracking-tight text-[#2C3A2B]">
+                                            {editedNames[loc.id] || loc.name}
+                                        </h3>
+                                    )}
+                                    <p className="text-[10px] font-black text-[#2C3A2B]/30 uppercase tracking-[0.2em]">
+                                        {loc.zones?.length || 0} Zones
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </section>
+        </main>
+    )
 }
