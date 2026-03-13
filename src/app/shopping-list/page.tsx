@@ -12,6 +12,7 @@ interface ShoppingItem {
     name: string
     quantity: number
     unit: string
+    category: string
     isPurchased: boolean
 }
 
@@ -51,6 +52,14 @@ export default function ShoppingList() {
         e.preventDefault()
         if (!newItemName || !household) return
 
+        // Simple intelligence: infer category for common items
+        let category = 'General'
+        const lowerName = newItemName.toLowerCase()
+        if (lowerName.includes('milk') || lowerName.includes('cheese') || lowerName.includes('yogurt')) category = 'Dairy'
+        if (lowerName.includes('bread') || lowerName.includes('bagel') || lowerName.includes('croissant')) category = 'Bakery'
+        if (lowerName.includes('apple') || lowerName.includes('banana') || lowerName.includes('carrot') || lowerName.includes('fruit') || lowerName.includes('veg')) category = 'Produce'
+        if (lowerName.includes('meat') || lowerName.includes('chicken') || lowerName.includes('beef') || lowerName.includes('pork')) category = 'Meat'
+
         await fetch('/api/shopping-list', {
             method: 'POST',
             body: JSON.stringify({
@@ -58,6 +67,7 @@ export default function ShoppingList() {
                 householdId: household.id,
                 quantity: 1,
                 unit: 'item',
+                category,
                 storeId: selectedStoreId
             })
         })
@@ -103,15 +113,23 @@ export default function ShoppingList() {
     const toBuy = filteredItems.filter(i => !i.isPurchased)
     const purchased = filteredItems.filter(i => i.isPurchased)
 
+    // Grouping logic for "Aisle View"
+    const groupedItems = toBuy.reduce((acc, item) => {
+        const cat = item.category || 'General'
+        if (!acc[cat]) acc[cat] = []
+        acc[cat].push(item)
+        return acc
+    }, {} as Record<string, ShoppingItem[]>)
+
     return (
         <main className="container min-h-screen py-8 pb-32">
             <header className="mb-8 p-6 bg-white/20 rounded-3xl backdrop-blur-md border border-white/20">
                 <div className="flex items-center justify-between mb-6">
                     <div>
                         <h1 className="text-3xl font-black text-[#2C3A2B]">Shopping List</h1>
-                        <p className="text-[10px] font-bold uppercase tracking-widest text-[#2C3A2B]/40">Household Essentials {selectedStoreId ? '(Filtered by Store)' : ''}</p>
+                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#2C3A2B]/40">LOGISTICS // HOUSEHOLD_ESSENTIALS</p>
                     </div>
-                    <div className="w-12 h-12 rounded-2xl bg-[#2C3A2B] flex items-center justify-center text-white font-black">
+                    <div className="w-12 h-12 rounded-2xl bg-[#2C3A2B] flex items-center justify-center text-white font-black active:scale-95 transition-transform cursor-pointer">
                         {toBuy.length}
                     </div>
                 </div>
@@ -135,13 +153,37 @@ export default function ShoppingList() {
                 />
             </section>
 
-            {/* To Buy List */}
-            <section className="space-y-3 mb-10">
-                <div className="flex items-center justify-between px-2 mb-2">
-                  <h2 className="text-[10px] font-bold uppercase tracking-widest text-[#2C3A2B]/40">Active Items</h2>
-                  <MoreVertical size={16} className="text-[#2C3A2B]/30" />
-                </div>
-                
+            {/* To Buy List - Grouped by Aisle */}
+            <div className="space-y-8">
+                {Object.entries(groupedItems).map(([category, catItems]) => (
+                    <section key={category} className="space-y-3">
+                        <div className="flex items-center justify-between px-2 mb-2">
+                            <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-[#2C3A2B]/40">{category} // AISLE</h2>
+                            <MoreVertical size={16} className="text-[#2C3A2B]/30" />
+                        </div>
+                        
+                        <div className="space-y-3">
+                            {catItems.map(item => (
+                                <div key={item.id} className="card bg-white/50 border-none p-5 flex items-center gap-4 group active:scale-[0.97] transition-all cursor-pointer">
+                                    <button 
+                                        onClick={(e) => { e.stopPropagation(); togglePurchased(item) }}
+                                        className="w-6 h-6 rounded-lg border-2 border-[#2C3A2B]/10 flex items-center justify-center hover:border-[#8DAA81] transition-colors active:scale-90"
+                                    >
+                                        <div className={`w-3 h-3 rounded-sm ${item.isPurchased ? 'bg-[#8DAA81]' : ''}`} />
+                                    </button>
+                                    <div className="flex-1">
+                                        <div className="font-bold text-[#2C3A2B] leading-tight">{item.name}</div>
+                                        <div className="text-[10px] font-medium text-[#2C3A2B]/40 uppercase tracking-widest">{item.quantity} {item.unit}</div>
+                                    </div>
+                                    <button onClick={(e) => { e.stopPropagation(); deleteItem(item.id) }} className="p-2 text-[#2C3A2B]/20 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all active:scale-90">
+                                        <Trash2 size={18} />
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
+                    </section>
+                ))}
+
                 {toBuy.length === 0 && (
                   <div className="card p-10 bg-white/10 border-dashed border-white/30 flex flex-col items-center gap-4">
                     <div className="w-16 h-16 rounded-full bg-white/20 flex items-center justify-center text-white">
@@ -150,25 +192,7 @@ export default function ShoppingList() {
                     <p className="font-bold text-[#2C3A2B]/40">List is empty</p>
                   </div>
                 )}
-
-                {toBuy.map(item => (
-                    <div key={item.id} className="card bg-white/50 border-none p-5 flex items-center gap-4 group active:scale-[0.98] transition-all">
-                        <button 
-                          onClick={() => togglePurchased(item)}
-                          className="w-6 h-6 rounded-lg border-2 border-[#2C3A2B]/10 flex items-center justify-center hover:border-[#8DAA81] transition-colors"
-                        >
-                          <div className={`w-3 h-3 rounded-sm ${item.isPurchased ? 'bg-[#8DAA81]' : ''}`} />
-                        </button>
-                        <div className="flex-1">
-                          <div className="font-bold text-[#2C3A2B] leading-tight">{item.name}</div>
-                          <div className="text-[10px] font-medium text-[#2C3A2B]/40 uppercase tracking-widest">{item.quantity} {item.unit}</div>
-                        </div>
-                        <button onClick={() => deleteItem(item.id)} className="p-2 text-[#2C3A2B]/20 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all">
-                          <Trash2 size={18} />
-                        </button>
-                    </div>
-                ))}
-            </section>
+            </div>
 
             {/* Purchased List */}
             {purchased.length > 0 && (

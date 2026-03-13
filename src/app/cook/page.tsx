@@ -59,7 +59,7 @@ export default function CookHub() {
     <main className="container min-h-screen py-8 pb-32">
       <header className="mb-8 px-2">
         <h1 className="text-4xl font-black text-[#2C3A2B] mb-1">Cook Hub</h1>
-        <p className="text-sm font-bold text-[#2C3A2B]/40 uppercase tracking-widest">Meal Planner & Diary</p>
+        <p className="text-[10px] font-black text-[#2C3A2B]/40 uppercase tracking-[0.2em]">OPERATIONS // MEAL_ENGINE</p>
       </header>
 
       {/* Date Carousel */}
@@ -67,11 +67,11 @@ export default function CookHub() {
         <div className="flex items-center justify-between px-2 mb-4">
           <div className="flex items-center gap-2">
             <Calendar size={18} className="text-[#2C3A2B]" />
-            <h2 className="font-bold text-sm uppercase tracking-widest text-[#2C3A2B]">Planner</h2>
+            <h2 className="font-black text-[10px] uppercase tracking-[0.2em] text-[#2C3A2B]">Planner // WEEKLY</h2>
           </div>
           <div 
             onClick={() => setSelectedDate(new Date())}
-            className="text-[10px] font-black uppercase tracking-widest text-[#8DAA81] cursor-pointer"
+            className="text-[10px] font-black uppercase tracking-widest text-[#8DAA81] cursor-pointer active:scale-90 transition-transform"
           >
             Today
           </div>
@@ -84,7 +84,7 @@ export default function CookHub() {
               <button
                 key={i}
                 onClick={() => setSelectedDate(date)}
-                className={`min-w-[75px] h-28 rounded-3xl flex flex-col items-center justify-center gap-1 transition-all ${
+                className={`min-w-[75px] h-28 rounded-3xl flex flex-col items-center justify-center gap-1 transition-all active:scale-95 ${
                   isSelected ? 'bg-[#2C3A2B] text-white shadow-2xl shadow-[#2C3A2B]/30 scale-105' : 'bg-white/40 text-[#2C3A2B]/40'
                 }`}
               >
@@ -111,7 +111,7 @@ export default function CookHub() {
               }`}
             >
               <div className="flex items-center gap-6">
-                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${plan ? 'bg-white/20' : 'bg-[#8DAA81]/10 text-[#8DAA81]'}`}>
+                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-transform active:scale-90 ${plan ? 'bg-white/20' : 'bg-[#8DAA81]/10 text-[#8DAA81]'}`}>
                   <UtensilsCrossed size={24} />
                 </div>
                 <div>
@@ -121,7 +121,7 @@ export default function CookHub() {
                   </p>
                 </div>
               </div>
-              <button className={`w-10 h-10 rounded-full flex items-center justify-center shadow-sm transition-all ${
+              <button className={`w-10 h-10 rounded-full flex items-center justify-center shadow-sm transition-all active:scale-90 ${
                 plan ? 'bg-white/20 text-white' : 'bg-white text-[#2C3A2B] opacity-0 group-hover:opacity-100'
               }`}>
                 {plan ? <Edit2 size={18} /> : <Plus size={20} />}

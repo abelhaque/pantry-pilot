@@ -97,6 +97,7 @@ model ShoppingListItem {
   quantity    Float     @default(1)
   unit        String    @default("item")
   isPurchased Boolean   @default(false)
+  category    String?   @default("General")
   householdId String
   household   Household @relation(fields: [householdId], references: [id], onDelete: Cascade)
   storeId     String?

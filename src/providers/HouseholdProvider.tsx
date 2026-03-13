@@ -33,26 +33,18 @@ export function HouseholdProvider({ children }: { children: React.ReactNode }) {
                 headers: { 'Content-Type': 'application/json' }
             })
 
-            if (res.ok) {
-                const data = await res.json()
-                if (data.household) {
-                    setHousehold(data.household)
-                } else if (process.env.NODE_ENV === 'production') {
-                    // Mock Identity Fallback
-                    setHousehold({ id: 'mock-id', name: 'Owner Household', locations: [] } as any)
-                }
+            const data = await res.json()
+            if (data.household) {
+                setHousehold(data.household)
             } else {
-                if (pathname !== '/login' && pathname !== '/' && pathname !== '/shopping-list') {
+                // Only redirect if absolutely no data and not on auth paths
+                const isAuthPath = pathname.startsWith('/login') || pathname.startsWith('/auth')
+                if (!isAuthPath) {
                     router.push('/login')
                 }
             }
         } catch (error) {
             console.error('Failed to fetch household', error)
-            if (process.env.NODE_ENV === 'production') {
-                 setHousehold({ id: 'mock-id', name: 'Owner Household', locations: [] } as any)
-            } else if (pathname !== '/login' && pathname !== '/' && pathname !== '/shopping-list') {
-                router.push('/login')
-            }
         } finally {
             setIsLoading(false)
         }
