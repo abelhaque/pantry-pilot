@@ -1,10 +1,12 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { useHousehold } from '@/providers/HouseholdProvider'
+import { redirect } from 'next/navigation'
 
 export default function LoginPage() {
+    redirect('/')
+    return null // unreachable but satisfies TS
+/*
     const [email, setEmail] = useState('')
     const [isLoading, setIsLoading] = useState(false)
     const [error, setError] = useState('')
