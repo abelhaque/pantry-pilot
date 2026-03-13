@@ -6,7 +6,7 @@ export async function GET(request: Request) {
     const householdId = searchParams.get('householdId')
     const date = searchParams.get('date')
 
-    if (!householdId) return NextResponse.json([])
+    if (!householdId) return new NextResponse(JSON.stringify([]), { headers: { 'Content-Type': 'application/json' } })
 
     const where: any = { householdId }
     if (date) {
@@ -21,7 +21,7 @@ export async function GET(request: Request) {
         where,
         orderBy: { date: 'asc' }
     })
-    return NextResponse.json(plans)
+    return new NextResponse(JSON.stringify(plans), { headers: { 'Content-Type': 'application/json' } })
 }
 
 export async function POST(request: Request) {
@@ -36,8 +36,8 @@ export async function POST(request: Request) {
                 householdId 
             }
         })
-        return NextResponse.json(plan)
+        return new NextResponse(JSON.stringify(plan), { headers: { 'Content-Type': 'application/json' } })
     } catch (error) {
-        return NextResponse.json({ error: 'Failed to save meal plan' }, { status: 500 })
+        return new NextResponse(JSON.stringify({ error: 'Failed to save meal plan' }), { status: 500, headers: { 'Content-Type': 'application/json' } })
     }
 }

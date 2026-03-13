@@ -12,8 +12,8 @@ export async function POST(request: Request) {
             }
         })
 
-        return NextResponse.json(zone)
+        return new NextResponse(JSON.stringify(zone), { headers: { 'Content-Type': 'application/json' } })
     } catch (error) {
-        return NextResponse.json({ error: 'Failed to create zone' }, { status: 500 })
+        return new NextResponse(JSON.stringify({ error: 'Failed to create zone' }), { status: 500, headers: { 'Content-Type': 'application/json' } })
     }
 }

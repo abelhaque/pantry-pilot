@@ -98,6 +98,9 @@ export async function POST(request: Request) {
 
     } catch (error) {
         console.error('API Error:', error)
-        return NextResponse.json({ error: 'Failed to login' }, { status: 500 })
+        return new NextResponse(JSON.stringify({ error: 'Failed to login' }), {
+            status: 500,
+            headers: { 'Content-Type': 'application/json' }
+        })
     }
 }

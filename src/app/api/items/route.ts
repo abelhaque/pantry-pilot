@@ -52,10 +52,10 @@ export async function POST(request: Request) {
             })
         }
 
-        return NextResponse.json(item)
+        return new NextResponse(JSON.stringify(item), { headers: { 'Content-Type': 'application/json' } })
     } catch (error) {
         console.error('Failed to add item', error)
-        return NextResponse.json({ error: 'Failed' }, { status: 500 })
+        return new NextResponse(JSON.stringify({ error: 'Failed' }), { status: 500, headers: { 'Content-Type': 'application/json' } })
     }
 }
 
@@ -64,7 +64,7 @@ export async function PATCH(request: Request) {
         const { id, zoneId, quantity, name, unit, category } = await request.json()
 
         if (!id) {
-            return NextResponse.json({ error: 'Item ID required' }, { status: 400 })
+            return new NextResponse(JSON.stringify({ error: 'Item ID required' }), { status: 400, headers: { 'Content-Type': 'application/json' } })
         }
 
         const updated = await prisma.item.update({

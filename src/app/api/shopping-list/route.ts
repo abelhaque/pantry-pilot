@@ -5,13 +5,13 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url)
     const householdId = searchParams.get('householdId')
 
-    if (!householdId) return NextResponse.json([])
+    if (!householdId) return new NextResponse(JSON.stringify([]), { headers: { 'Content-Type': 'application/json' } })
 
     const list = await prisma.shoppingListItem.findMany({
         where: { householdId },
         orderBy: { createdAt: 'desc' }
     })
-    return NextResponse.json(list)
+    return new NextResponse(JSON.stringify(list), { headers: { 'Content-Type': 'application/json' } })
 }
 
 export async function POST(request: Request) {
@@ -20,9 +20,9 @@ export async function POST(request: Request) {
         const item = await prisma.shoppingListItem.create({
             data: { name, quantity, unit, householdId }
         })
-        return NextResponse.json(item)
+        return new NextResponse(JSON.stringify(item), { headers: { 'Content-Type': 'application/json' } })
     } catch (error) {
-        return NextResponse.json({ error: 'Failed' }, { status: 500 })
+        return new NextResponse(JSON.stringify({ error: 'Failed' }), { status: 500, headers: { 'Content-Type': 'application/json' } })
     }
 }
 
@@ -33,9 +33,9 @@ export async function PATCH(request: Request) {
             where: { id },
             data: { isPurchased }
         })
-        return NextResponse.json(updated)
+        return new NextResponse(JSON.stringify(updated), { headers: { 'Content-Type': 'application/json' } })
     } catch (error) {
-        return NextResponse.json({ error: 'Failed' }, { status: 500 })
+        return new NextResponse(JSON.stringify({ error: 'Failed' }), { status: 500, headers: { 'Content-Type': 'application/json' } })
     }
 }
 
@@ -46,8 +46,8 @@ export async function DELETE(request: Request) {
         if (id) {
             await prisma.shoppingListItem.delete({ where: { id } })
         }
-        return NextResponse.json({ success: true })
+        return new NextResponse(JSON.stringify({ success: true }), { headers: { 'Content-Type': 'application/json' } })
     } catch (error) {
-        return NextResponse.json({ error: 'Failed' }, { status: 500 })
+        return new NextResponse(JSON.stringify({ error: 'Failed' }), { status: 500, headers: { 'Content-Type': 'application/json' } })
     }
 }

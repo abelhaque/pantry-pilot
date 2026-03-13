@@ -6,7 +6,7 @@ export async function POST(request: Request) {
         const { name, type, householdId } = await request.json()
 
         if (!name || !householdId) {
-            return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
+            return new NextResponse(JSON.stringify({ error: 'Missing required fields' }), { status: 400, headers: { 'Content-Type': 'application/json' } })
         }
 
         const location = await prisma.location.create({
@@ -23,9 +23,9 @@ export async function POST(request: Request) {
             }
         })
 
-        return NextResponse.json(location)
+        return new NextResponse(JSON.stringify(location), { headers: { 'Content-Type': 'application/json' } })
     } catch (error) {
         console.error('Failed to create location', error)
-        return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
+        return new NextResponse(JSON.stringify({ error: 'Internal Server Error' }), { status: 500, headers: { 'Content-Type': 'application/json' } })
     }
 }

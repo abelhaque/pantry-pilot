@@ -7,8 +7,12 @@ export async function GET(request: Request) {
         const supabase = await createClient()
         const { data: { user: sbUser }, error: sbError } = await supabase.auth.getUser()
 
+        // Graceful fail for unauthenticated users
         if (sbError || !sbUser || !sbUser.email) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+            return new NextResponse(JSON.stringify({}), {
+                status: 200,
+                headers: { 'Content-Type': 'application/json' }
+            })
         }
 
         let user = await prisma.user.findUnique({
@@ -49,9 +53,12 @@ export async function GET(request: Request) {
             })
             
             const newUser = newHousehold.users[0]
-            return NextResponse.json({
+            return new NextResponse(JSON.stringify({
                 user: { id: newUser.id, name: newUser.name, householdId: newUser.householdId },
                 household: newHousehold
+            }), {
+                status: 200,
+                headers: { 'Content-Type': 'application/json' }
             })
         }
 
@@ -61,13 +68,20 @@ export async function GET(request: Request) {
             householdId: user.householdId
         }
 
-        return NextResponse.json({
+        return new NextResponse(JSON.stringify({
             user: userResponse,
             household: user.household
+        }), {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' }
         })
 
     } catch (error) {
         console.error('API Error:', error)
-        return NextResponse.json({ error: 'Failed to initialize' }, { status: 500 })
+        // Graceful fail on server error
+        return new NextResponse(JSON.stringify({}), {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' }
+        })
     }
 }

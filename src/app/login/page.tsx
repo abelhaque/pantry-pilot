@@ -72,9 +72,14 @@ export default function LoginPage() {
                     <button 
                         type="submit" 
                         disabled={isLoading}
-                        className="btn btn-primary w-full"
+                        className={`btn btn-primary w-full ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
                     >
-                        {isLoading ? 'Logging in...' : 'Continue'}
+                        {isLoading ? (
+                            <div className="flex items-center justify-center gap-2">
+                                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                <span>Processing...</span>
+                            </div>
+                        ) : 'Continue'}
                     </button>
                 </form>
 

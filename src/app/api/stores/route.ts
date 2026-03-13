@@ -5,14 +5,14 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url)
     const householdId = searchParams.get('householdId')
 
-    if (!householdId) return NextResponse.json([])
+    if (!householdId) return new NextResponse(JSON.stringify([]), { headers: { 'Content-Type': 'application/json' } })
 
     const stores = await prisma.store.findMany({
         where: { householdId },
         include: { _count: { select: { items: true } } },
         orderBy: { name: 'asc' }
     })
-    return NextResponse.json(stores)
+    return new NextResponse(JSON.stringify(stores), { headers: { 'Content-Type': 'application/json' } })
 }
 
 export async function POST(request: Request) {
@@ -21,8 +21,8 @@ export async function POST(request: Request) {
         const store = await prisma.store.create({
             data: { name, householdId }
         })
-        return NextResponse.json(store)
+        return new NextResponse(JSON.stringify(store), { headers: { 'Content-Type': 'application/json' } })
     } catch (error) {
-        return NextResponse.json({ error: 'Failed to create store' }, { status: 500 })
+        return new NextResponse(JSON.stringify({ error: 'Failed to create store' }), { status: 500, headers: { 'Content-Type': 'application/json' } })
     }
 }
