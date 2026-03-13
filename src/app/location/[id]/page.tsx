@@ -3,6 +3,7 @@
 import { useHousehold } from '@/providers/HouseholdProvider'
 import { useParams, useRouter } from 'next/navigation'
 import { useState, useMemo } from 'react'
+import * as LucideIcons from 'lucide-react'
 import AddItem from '@/components/AddItem'
 import { getCategoryIcon, getExpiryStatus } from '@/utils/categories'
 import MoveItemModal from '@/components/MoveItemModal'
@@ -83,24 +84,26 @@ export default function LocationReference() {
 
     return (
         <main className="container min-h-screen py-8 pb-32">
-            <header className="mb-6">
-                <button onClick={() => router.back()} className="text-sm text-muted-foreground mb-4">
-                    ← Back
+            <header className="mb-8 px-2">
+                <button 
+                  onClick={() => router.push('/')} 
+                  className="text-[10px] font-black uppercase tracking-widest text-[#2C3A2B]/40 mb-6 flex items-center gap-2 hover:text-[#2C3A2B] transition-colors"
+                >
+                    <LucideIcons.ArrowLeft size={14} /> Back to Dashboard
                 </button>
-                <div className="flex justify-between items-center">
-                    <h1 className="text-2xl font-bold">{location.name}</h1>
-                    <span className="text-3xl">
-                        {location.type === 'fridge' && '❄️'}
-                        {location.type === 'freezer' && '🧊'}
-                        {location.type === 'pantry' && '🥫'}
-                        {location.type === 'other' && '📦'}
-                    </span>
+                <div className="flex justify-between items-end">
+                    <div>
+                        <h1 className="text-4xl font-black text-[#2C3A2B] mb-1">{location.name}</h1>
+                        <p className="text-[10px] font-bold text-[#2C3A2B]/40 uppercase tracking-widest">{location.type} Management</p>
+                    </div>
+                    <div className="w-16 h-16 rounded-3xl bg-white/40 flex items-center justify-center text-4xl shadow-sm backdrop-blur-sm">
+                        {location.type === 'fridge' ? '❄️' : location.type === 'freezer' ? '🧊' : '📦'}
+                    </div>
                 </div>
-                <p className="text-muted-foreground capitalize">{location.type}</p>
             </header>
 
             {isMovingItem && (
-                <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                <div className="fixed inset-0 bg-[#2C3A2B]/60 backdrop-blur-md z-[100] flex items-center justify-center p-4">
                     <div className="w-full max-w-sm">
                         <MoveItemModal
                             item={isMovingItem}
@@ -113,7 +116,7 @@ export default function LocationReference() {
             )}
 
             {isAddingItem && (
-                <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                <div className="fixed inset-0 bg-[#2C3A2B]/60 backdrop-blur-md z-[100] flex items-center justify-center p-4">
                     <div className="w-full max-w-lg">
                         <AddItem
                             onAdd={handleAddItem}
@@ -124,52 +127,60 @@ export default function LocationReference() {
                 </div>
             )}
 
-            <section className="mb-8">
-                <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-lg font-semibold">Zones</h2>
-                    <button onClick={() => setIsAddingZone(!isAddingZone)} className="text-primary text-sm font-medium">
+            <section className="mb-12 px-2">
+                <div className="flex items-center justify-between mb-6">
+                    <h2 className="text-[10px] font-bold uppercase tracking-widest text-[#2C3A2B]/40">Storage Zones</h2>
+                    <button 
+                      onClick={() => setIsAddingZone(!isAddingZone)} 
+                      className="text-[#2C3A2B] text-xs font-bold hover:underline"
+                    >
                         {isAddingZone ? 'Cancel' : '+ Add Zone'}
                     </button>
                 </div>
 
                 {isAddingZone && (
-                    <form onSubmit={handleAddZone} className="card mb-4 flex gap-2">
+                    <form onSubmit={handleAddZone} className="card mb-6 p-6 bg-white/60 border-none backdrop-blur-md animate-in slide-in-from-top-4 flex gap-3">
                         <input
                             value={newZoneName}
                             onChange={(e) => setNewZoneName(e.target.value)}
-                            placeholder="Zone Name (e.g. Cheese Drawer)"
-                            className="input flex-1"
+                            placeholder="e.g. Upper Shelf"
+                            className="flex-1 h-12 px-5 rounded-xl bg-white/50 border-none text-[#2C3A2B] font-bold outline-none"
                             autoFocus
                         />
-                        <button type="submit" className="btn btn-primary">Save</button>
+                        <button type="submit" className="h-12 px-6 bg-[#2C3A2B] text-white font-black rounded-xl text-xs uppercase tracking-widest">Add</button>
                     </form>
                 )}
 
-                <div className="space-y-4">
+                <div className="space-y-6">
                     {location.zones.map(zone => (
-                        <div key={zone.id} className="card">
-                            <div className="flex justify-between items-center mb-2">
-                                <h3 className="font-semibold">{zone.name}</h3>
-                                <span className="text-xs text-muted-foreground">{zone.items.length} items</span>
+                        <div key={zone.id} className="card bg-white/40 border-none p-0 overflow-hidden">
+                            <div className="p-5 flex justify-between items-center bg-white/20 border-b border-black/5">
+                                <h3 className="font-black text-xs uppercase tracking-widest text-[#2C3A2B]">{zone.name}</h3>
+                                <div className="px-3 py-1 rounded-full bg-[#2C3A2B]/5 text-[9px] font-black uppercase tracking-tighter text-[#2C3A2B]/40">
+                                  {zone.items.length} items
+                                </div>
                             </div>
 
                             {zone.items.length === 0 ? (
-                                <div className="text-sm text-muted-foreground text-center py-2 border border-dashed rounded opacity-50">
-                                    Empty
+                                <div className="p-8 text-center bg-white/10 border-dashed border-black/5 m-4 rounded-2xl">
+                                    <p className="text-[10px] font-bold text-[#2C3A2B]/20 uppercase tracking-widest">No items in this zone</p>
                                 </div>
                             ) : (
-                                <ul className="space-y-1">
+                                <ul className="divide-y divide-black/5">
                                     {zone.items.map(item => (
-                                        <li key={item.id} className="text-sm border-b py-2 last:border-0 flex justify-between items-center group/item pl-1 pr-1 hover:bg-muted/30 rounded transition-colors">
-                                            <div className="flex items-center gap-2">
-                                                <span className="text-xl">{getCategoryIcon(item.category)}</span>
+                                        <li key={item.id} className="p-5 flex justify-between items-center hover:bg-white/20 transition-colors group">
+                                            <div className="flex items-center gap-4">
+                                                <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center shadow-sm text-xl">
+                                                    {getCategoryIcon(item.category)}
+                                                </div>
                                                 <div>
-                                                    <div className="font-medium">{item.name}</div>
+                                                    <div className="font-bold text-[#2C3A2B]">{item.name}</div>
                                                     {item.expiry && (
-                                                        <div className={`text-[10px] uppercase font-bold tracking-wider ${getExpiryStatus(item.expiry) === 'expired' ? 'text-destructive' :
-                                                            getExpiryStatus(item.expiry) === 'warning' ? 'text-status-warning' :
-                                                                'text-status-good'
-                                                            }`}>
+                                                        <div className={`text-[9px] uppercase font-black tracking-widest mt-0.5 ${
+                                                          getExpiryStatus(item.expiry) === 'expired' ? 'text-red-500' :
+                                                          getExpiryStatus(item.expiry) === 'warning' ? 'text-orange-500' :
+                                                          'text-[#8DAA81]'
+                                                        }`}>
                                                             {getExpiryStatus(item.expiry)}
                                                         </div>
                                                     )}
@@ -177,39 +188,35 @@ export default function LocationReference() {
                                             </div>
 
                                             <div className="flex items-center gap-3">
-                                                <div className="flex items-center gap-1 bg-secondary rounded px-1">
+                                                <div className="flex items-center gap-1 bg-white/50 rounded-xl p-1 shadow-sm">
                                                     <button
                                                         onClick={() => handleUpdateQuantity(item.id, item.quantity - 1)}
-                                                        className="w-6 h-6 flex items-center justify-center hover:bg-background rounded"
+                                                        className="w-8 h-8 flex items-center justify-center hover:bg-white rounded-lg transition-colors text-[#2C3A2B]"
                                                         disabled={item.quantity <= 0}
                                                     >
-                                                        -
+                                                        <LucideIcons.Minus size={14} strokeWidth={3} />
                                                     </button>
-                                                    <span className="font-mono text-xs w-8 text-center">{item.quantity}</span>
+                                                    <span className="font-black text-xs w-8 text-center text-[#2C3A2B]">{item.quantity}</span>
                                                     <button
                                                         onClick={() => handleUpdateQuantity(item.id, item.quantity + 1)}
-                                                        className="w-6 h-6 flex items-center justify-center hover:bg-background rounded"
+                                                        className="w-8 h-8 flex items-center justify-center hover:bg-white rounded-lg transition-colors text-[#2C3A2B]"
                                                     >
-                                                        +
+                                                        <LucideIcons.Plus size={14} strokeWidth={3} />
                                                     </button>
                                                 </div>
-                                                <span className="text-xs text-muted-foreground w-8">{item.unit}</span>
-
-                                                {/* Action Buttons */}
-                                                <div className="flex gap-1">
+                                                
+                                                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                                     <button
                                                         onClick={() => setIsMovingItem(item)}
-                                                        className="p-1.5 text-muted-foreground hover:text-primary hover:bg-secondary rounded"
-                                                        title="Move"
+                                                        className="p-2 text-[#2C3A2B]/20 hover:text-[#2C3A2B] transition-colors"
                                                     >
-                                                        ↪️
+                                                        <LucideIcons.Move size={18} />
                                                     </button>
                                                     <button
                                                         onClick={() => handleDeleteItem(item.id)}
-                                                        className="p-1.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded"
-                                                        title="Delete"
+                                                        className="p-2 text-[#2C3A2B]/20 hover:text-red-500 transition-colors"
                                                     >
-                                                        🗑️
+                                                        <LucideIcons.Trash2 size={18} />
                                                     </button>
                                                 </div>
                                             </div>
@@ -217,20 +224,28 @@ export default function LocationReference() {
                                     ))}
                                 </ul>
                             )}
-                            <div className="mt-2 text-right">
-                                <button onClick={() => openAddItem(zone.id)} className="text-xs text-primary font-medium p-2 hover:bg-secondary rounded">+ Add Item</button>
+                            <div className="p-3 bg-white/20 text-center">
+                                <button 
+                                  onClick={() => openAddItem(zone.id)} 
+                                  className="text-[10px] font-black uppercase tracking-widest text-[#2C3A2B]/40 hover:text-[#2C3A2B] transition-colors"
+                                >
+                                  + Quick Add Item
+                                </button>
                             </div>
                         </div>
                     ))}
                 </div>
             </section>
 
-            <div className="fixed bottom-4 left-4 right-4 max-w-lg mx-auto">
-                <button onClick={() => openAddItem()} className="btn btn-primary w-full shadow-lg text-lg py-4">
-                    + Add Item to {location.name}
+            <div className="fixed bottom-32 left-8 right-8 max-w-lg mx-auto z-40">
+                <button 
+                  onClick={() => openAddItem()} 
+                  className="w-full h-16 bg-[#2C3A2B] text-white font-black rounded-3xl shadow-2xl shadow-[#2C3A2B]/40 flex items-center justify-center gap-3 active:scale-95 transition-all"
+                >
+                    <LucideIcons.Plus size={20} strokeWidth={3} />
+                    <span className="uppercase tracking-widest text-sm text-[16px]">Add to {location.name}</span>
                 </button>
             </div>
-
         </main>
     )
 }

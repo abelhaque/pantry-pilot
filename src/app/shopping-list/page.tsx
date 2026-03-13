@@ -4,6 +4,8 @@ import { useHousehold } from '@/providers/HouseholdProvider'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import AddItem from '@/components/AddItem'
+import { StoreManager } from '@/components/StoreManager'
+import { Plus, Search, Mic, MoreVertical, Trash2, ArrowRight, ShoppingCart } from 'lucide-react'
 
 interface ShoppingItem {
     id: string
@@ -19,6 +21,7 @@ export default function ShoppingList() {
 
     const [items, setItems] = useState<ShoppingItem[]>([])
     const [newItemName, setNewItemName] = useState('')
+    const [selectedStoreId, setSelectedStoreId] = useState<string | null>(null)
 
     // For assigning purchased items
     const [assigningItem, setAssigningItem] = useState<ShoppingItem | null>(null)
@@ -54,7 +57,8 @@ export default function ShoppingList() {
                 name: newItemName,
                 householdId: household.id,
                 quantity: 1,
-                unit: 'item'
+                unit: 'item',
+                storeId: selectedStoreId
             })
         })
         setNewItemName('')
@@ -77,7 +81,6 @@ export default function ShoppingList() {
     const handleAssign = async (inventoryItem: any) => {
         if (!assigningItem || !household) return
 
-        // 1. Create in inventory
         await fetch('/api/items', {
             method: 'POST',
             body: JSON.stringify({
@@ -86,57 +89,83 @@ export default function ShoppingList() {
             })
         })
 
-        // 2. Remove from shopping list
         await deleteItem(assigningItem.id)
-
         setAssigningItem(null)
-        refresh() // Update household context
+        refresh()
     }
 
-    if (!household) return <div>Loading...</div>
+    if (!household) return <div className="p-8 text-center text-[#2C3A2B] font-bold">Loading...</div>
 
-    const toBuy = items.filter(i => !i.isPurchased)
-    const purchased = items.filter(i => i.isPurchased)
+    const filteredItems = selectedStoreId 
+        ? items.filter(i => (i as any).storeId === selectedStoreId)
+        : items
+
+    const toBuy = filteredItems.filter(i => !i.isPurchased)
+    const purchased = filteredItems.filter(i => i.isPurchased)
 
     return (
         <main className="container min-h-screen py-8 pb-32">
-            <header className="mb-6 flex items-center justify-between">
-                <div>
-                    <button onClick={() => router.push('/')} className="text-sm text-muted-foreground mb-2">
-                        ← Dashboard
-                    </button>
-                    <h1 className="text-2xl font-bold">Shopping List</h1>
+            <header className="mb-8 p-6 bg-white/20 rounded-3xl backdrop-blur-md border border-white/20">
+                <div className="flex items-center justify-between mb-6">
+                    <div>
+                        <h1 className="text-3xl font-black text-[#2C3A2B]">Shopping List</h1>
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-[#2C3A2B]/40">Household Essentials {selectedStoreId ? '(Filtered by Store)' : ''}</p>
+                    </div>
+                    <div className="w-12 h-12 rounded-2xl bg-[#2C3A2B] flex items-center justify-center text-white font-black">
+                        {toBuy.length}
+                    </div>
                 </div>
-                <div className="bg-primary text-primary-foreground text-sm font-bold px-3 py-1 rounded-full">
-                    {toBuy.length} items
-                </div>
+
+                <form onSubmit={handleAdd} className="relative group">
+                    <input
+                        value={newItemName}
+                        onChange={e => setNewItemName(e.target.value)}
+                        placeholder={selectedStoreId ? "Add item to this store..." : "Add item..."}
+                        className="w-full h-14 pl-12 pr-12 rounded-2xl bg-white/60 border-none text-[#2C3A2B] placeholder-[#2C3A2B]/30 font-bold focus:ring-4 focus:ring-[#2C3A2B]/5 transition-all outline-none"
+                    />
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[#2C3A2B]/30" size={20} />
+                    <Mic className="absolute right-4 top-1/2 -translate-y-1/2 text-[#2C3A2B]/30" size={20} />
+                </form>
             </header>
 
-            {/* Quick Add */}
-            <form onSubmit={handleAdd} className="flex gap-2 mb-8">
-                <input
-                    value={newItemName}
-                    onChange={e => setNewItemName(e.target.value)}
-                    placeholder="Add item..."
-                    className="input flex-1"
+            <section className="mb-10">
+                <StoreManager 
+                    onStoreSelect={setSelectedStoreId}
+                    selectedStoreId={selectedStoreId}
                 />
-                <button type="submit" className="btn btn-primary">+</button>
-            </form>
+            </section>
 
             {/* To Buy List */}
-            <section className="space-y-2 mb-8">
-                {toBuy.length === 0 && <div className="text-center text-muted-foreground py-8">All clear!</div>}
+            <section className="space-y-3 mb-10">
+                <div className="flex items-center justify-between px-2 mb-2">
+                  <h2 className="text-[10px] font-bold uppercase tracking-widest text-[#2C3A2B]/40">Active Items</h2>
+                  <MoreVertical size={16} className="text-[#2C3A2B]/30" />
+                </div>
+                
+                {toBuy.length === 0 && (
+                  <div className="card p-10 bg-white/10 border-dashed border-white/30 flex flex-col items-center gap-4">
+                    <div className="w-16 h-16 rounded-full bg-white/20 flex items-center justify-center text-white">
+                      <ShoppingCart size={32} />
+                    </div>
+                    <p className="font-bold text-[#2C3A2B]/40">List is empty</p>
+                  </div>
+                )}
+
                 {toBuy.map(item => (
-                    <div key={item.id} className="card flex items-center gap-3 p-3">
-                        <input
-                            type="checkbox"
-                            checked={item.isPurchased}
-                            onChange={() => togglePurchased(item)}
-                            className="w-5 h-5 accent-primary cursor-pointer"
-                        />
-                        <div className="flex-1 font-medium">{item.name}</div>
-                        <div className="text-sm text-muted-foreground">{item.quantity} {item.unit}</div>
-                        <button onClick={() => deleteItem(item.id)} className="text-muted-foreground hover:text-destructive">×</button>
+                    <div key={item.id} className="card bg-white/50 border-none p-5 flex items-center gap-4 group active:scale-[0.98] transition-all">
+                        <button 
+                          onClick={() => togglePurchased(item)}
+                          className="w-6 h-6 rounded-lg border-2 border-[#2C3A2B]/10 flex items-center justify-center hover:border-[#8DAA81] transition-colors"
+                        >
+                          <div className={`w-3 h-3 rounded-sm ${item.isPurchased ? 'bg-[#8DAA81]' : ''}`} />
+                        </button>
+                        <div className="flex-1">
+                          <div className="font-bold text-[#2C3A2B] leading-tight">{item.name}</div>
+                          <div className="text-[10px] font-medium text-[#2C3A2B]/40 uppercase tracking-widest">{item.quantity} {item.unit}</div>
+                        </div>
+                        <button onClick={() => deleteItem(item.id)} className="p-2 text-[#2C3A2B]/20 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all">
+                          <Trash2 size={18} />
+                        </button>
                     </div>
                 ))}
             </section>
@@ -144,22 +173,22 @@ export default function ShoppingList() {
             {/* Purchased List */}
             {purchased.length > 0 && (
                 <section>
-                    <h2 className="text-sm font-semibold text-muted-foreground mb-3 uppercase tracking-wider">Purchased</h2>
-                    <div className="space-y-2 opacity-80">
+                    <h2 className="text-[10px] font-bold uppercase tracking-widest text-[#2C3A2B]/40 px-2 mb-4">Completed</h2>
+                    <div className="space-y-2">
                         {purchased.map(item => (
-                            <div key={item.id} className="card flex items-center gap-3 p-3 bg-secondary/50">
-                                <input
-                                    type="checkbox"
-                                    checked={item.isPurchased}
-                                    onChange={() => togglePurchased(item)}
-                                    className="w-5 h-5 accent-primary cursor-pointer"
-                                />
-                                <div className="flex-1 line-through text-muted-foreground">{item.name}</div>
+                            <div key={item.id} className="card bg-[#2C3A2B]/5 border-none p-4 flex items-center gap-4 opacity-70">
+                                <button 
+                                  onClick={() => togglePurchased(item)}
+                                  className="w-5 h-5 rounded-md bg-[#8DAA81] flex items-center justify-center"
+                                >
+                                  <div className="w-2 h-2 rounded-full bg-white" />
+                                </button>
+                                <div className="flex-1 line-through font-bold text-[#2C3A2B]/40">{item.name}</div>
                                 <button
                                     onClick={() => setAssigningItem(item)}
-                                    className="btn btn-primary text-xs py-1 px-3 h-auto"
+                                    className="px-4 py-2 bg-[#2C3A2B] text-white text-[10px] font-bold uppercase tracking-widest rounded-xl hover:shadow-lg transition-all flex items-center gap-2"
                                 >
-                                    Assign to Storage
+                                    Unpack <ArrowRight size={14} />
                                 </button>
                             </div>
                         ))}
@@ -169,11 +198,10 @@ export default function ShoppingList() {
 
             {/* Assign Modal */}
             {assigningItem && (
-                <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="w-full max-w-lg">
-                        <div className="bg-card p-4 rounded-t-xl border-b mb-[-1px] relative z-10">
-                            <h3 className="font-semibold">Assign "{assigningItem.name}"</h3>
-                        </div>
+                <div className="fixed inset-0 bg-[#2C3A2B]/60 backdrop-blur-md z-[100] flex items-end justify-center">
+                    <div className="w-full max-w-md bg-white rounded-t-[3rem] p-8 animate-in slide-in-from-bottom-full duration-500">
+                        <div className="w-12 h-1.5 bg-zinc-100 rounded-full mx-auto mb-8" />
+                        <h3 className="text-2xl font-black text-[#2C3A2B] mb-6">Where to store <span className="text-[#8DAA81]">"{assigningItem.name}"</span>?</h3>
                         <AddItem
                             onAdd={handleAssign}
                             onCancel={() => setAssigningItem(null)}

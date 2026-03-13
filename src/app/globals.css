@@ -3,41 +3,41 @@
 @tailwind utilities;
 
 :root {
-  /* Premium Minimalist Palette */
-  --background: #fdfdfd;
-  --foreground: #1c1c1c;
+  /* Sage Green Reference Palette */
+  --background: #8DAA81; /* Main Sage Green Background */
+  --foreground: #2C3A2B; /* Deep Charcoal Green for Text */
   
-  --card: #ffffff;
-  --card-foreground: #1c1c1c;
+  --card: rgba(255, 255, 255, 0.9);
+  --card-foreground: #2C3A2B;
   
   --popover: #ffffff;
-  --popover-foreground: #1c1c1c;
+  --popover-foreground: #2C3A2B;
   
-  --primary: #18181b; /* Zinc 950 */
-  --primary-foreground: #fafafa;
+  --primary: #2C3A2B; 
+  --primary-foreground: #ffffff;
   
-  --secondary: #f4f4f5; /* Zinc 100 */
-  --secondary-foreground: #18181b;
+  --secondary: rgba(255, 255, 255, 0.2); 
+  --secondary-foreground: #2C3A2B;
   
-  --muted: #f4f4f5;
-  --muted-foreground: #71717a;
+  --muted: rgba(255, 255, 255, 0.1);
+  --muted-foreground: #4A5D48;
   
-  --accent: #f4f4f5;
-  --accent-foreground: #18181b;
+  --accent: rgba(255, 255, 255, 0.3);
+  --accent-foreground: #2C3A2B;
   
   --destructive: #ef4444;
   --destructive-foreground: #fafafa;
 
-  --border: #e4e4e7;
-  --input: #e4e4e7;
-  --ring: #18181b;
+  --border: rgba(44, 58, 43, 0.1);
+  --input: rgba(255, 255, 255, 0.5);
+  --ring: #2C3A2B;
 
-  --radius: 0.75rem;
+  --radius: 1.25rem; /* More rounded as per reference */
   
   /* Status Colors */
-  --status-good: #10b981; /* Emerald 500 */
-  --status-warning: #f59e0b; /* Amber 500 */
-  --status-critical: #ef4444; /* Red 500 */
+  --status-good: #10b981; 
+  --status-warning: #f59e0b; 
+  --status-critical: #ef4444; 
 }
 
 @media (prefers-color-scheme: dark) {
