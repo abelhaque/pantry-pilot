@@ -4,71 +4,47 @@
 
 :root {
   /* Sage Green Reference Palette */
-  --background: #8DAA81; /* Main Sage Green Background */
+  --background: #E3EADF; /* Light Sage Green Background */
   --foreground: #2C3A2B; /* Deep Charcoal Green for Text */
   
-  --card: rgba(255, 255, 255, 0.9);
+  --card: #FDFDFB;
   --card-foreground: #2C3A2B;
   
   --popover: #ffffff;
   --popover-foreground: #2C3A2B;
   
-  --primary: #2C3A2B; 
+  --primary: #8DAA81; /* Primary Green */
   --primary-foreground: #ffffff;
   
-  --secondary: rgba(255, 255, 255, 0.2); 
+  --secondary: #5DADE2; 
   --secondary-foreground: #2C3A2B;
   
-  --muted: rgba(255, 255, 255, 0.1);
+  --muted: rgba(44, 58, 43, 0.1);
   --muted-foreground: #4A5D48;
   
-  --accent: rgba(255, 255, 255, 0.3);
-  --accent-foreground: #2C3A2B;
+  --accent: #B08D57;
+  --accent-foreground: #ffffff;
   
   --destructive: #ef4444;
   --destructive-foreground: #fafafa;
 
-  --border: rgba(44, 58, 43, 0.1);
-  --input: rgba(255, 255, 255, 0.5);
-  --ring: #2C3A2B;
+  --border: #F0F0E8;
+  --input: rgba(255, 255, 255, 0.8);
+  --ring: #8DAA81;
 
-  --radius: 1.25rem; /* More rounded as per reference */
-  
-  /* Status Colors */
-  --status-good: #10b981; 
-  --status-warning: #f59e0b; 
-  --status-critical: #ef4444; 
+  --radius: 20px;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #09090b; /* Zinc 950 */
-    --foreground: #fafafa; /* Zinc 50 */
+    --background: #1a2119;
+    --foreground: #e3eadf;
     
-    --card: #09090b;
-    --card-foreground: #fafafa;
+    --card: #2c3a2b;
+    --card-foreground: #e3eadf;
     
-    --popover: #09090b;
-    --popover-foreground: #fafafa;
-    
-    --primary: #fafafa;
-    --primary-foreground: #18181b;
-    
-    --secondary: #27272a; /* Zinc 800 */
-    --secondary-foreground: #fafafa;
-    
-    --muted: #27272a;
-    --muted-foreground: #a1a1aa;
-    
-    --accent: #27272a;
-    --accent-foreground: #fafafa;
-    
-    --destructive: #7f1d1d;
-    --destructive-foreground: #fafafa;
-    
-    --border: #27272a;
-    --input: #27272a;
-    --ring: #d4d4d8;
+    --primary: #8daa81;
+    --primary-foreground: #ffffff;
   }
 }
 
@@ -86,16 +62,44 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-a {
-  color: inherit;
-  text-decoration: none;
-}
+@layer utilities {
+  .tactile-card {
+    background: linear-gradient(to bottom, #FDFDFB, #F8F8F0);
+    border: 1px solid #F0F0E8;
+    box-shadow: 
+      6px 6px 15px rgba(44, 58, 43, 0.12), 
+      -4px -4px 15px rgba(255, 255, 255, 0.7);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
 
-/* Utilities */
-.container {
-  max-width: 600px; /* Mobile focused */
-  margin: 0 auto;
-  padding: 1rem;
+  .tactile-card:active {
+    transform: scale(0.98);
+    box-shadow: 
+      2px 2px 8px rgba(44, 58, 43, 0.1), 
+      -2px -2px 8px rgba(255, 255, 255, 0.6);
+  }
+
+  .tactile-button {
+    box-shadow: 
+      4px 4px 10px rgba(44, 58, 43, 0.15), 
+      -2px -2px 10px rgba(255, 255, 255, 0.5);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .tactile-button:active {
+    transform: scale(0.95);
+    box-shadow: 
+      1px 1px 4px rgba(44, 58, 43, 0.1), 
+      -1px -1px 4px rgba(255, 255, 255, 0.4);
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
 }
 
 .card {
