@@ -2,7 +2,6 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react'
 import { Household, Location, Item } from '@/types'
-import { useRouter, usePathname } from 'next/navigation'
 
 interface HouseholdContextType {
     household: Household | null
@@ -23,8 +22,6 @@ export const useHousehold = () => useContext(HouseholdContext)
 export function HouseholdProvider({ children }: { children: React.ReactNode }) {
     const [household, setHousehold] = useState<Household | null>(null)
     const [isLoading, setIsLoading] = useState(true)
-    const router = useRouter()
-    const pathname = usePathname()
 
     const fetchHousehold = async () => {
         try {
@@ -37,11 +34,8 @@ export function HouseholdProvider({ children }: { children: React.ReactNode }) {
             if (data.household) {
                 setHousehold(data.household)
             } else {
-                // Only redirect if absolutely no data and not on auth paths
-                const isAuthPath = pathname.startsWith('/login') || pathname.startsWith('/auth')
-                if (!isAuthPath) {
-                    router.push('/login')
-                }
+                // AUTH BYPASS: No redirect. Just log — the API should always return a household.
+                console.warn('No household returned from /api/init', data)
             }
         } catch (error) {
             console.error('Failed to fetch household', error)
@@ -52,7 +46,7 @@ export function HouseholdProvider({ children }: { children: React.ReactNode }) {
 
     useEffect(() => {
         fetchHousehold()
-    }, [pathname])
+    }, [])
 
     const createLocation = async (name: string, type: string) => {
         if (!household) return

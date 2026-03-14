@@ -1,39 +1,9 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { createClient } from '@/utils/supabase/server'
 
+// AUTH BYPASS: Skip all Supabase token/session checks. Return first household directly.
 export async function GET(request: Request) {
     try {
-        const supabase = await createClient()
-        const { data: { user: sbUser }, error: sbError } = await supabase.auth.getUser()
-
-        // If authenticated via Supabase, find user by email
-        if (sbUser?.email) {
-            const user = await prisma.user.findUnique({
-                where: { email: sbUser.email },
-                include: {
-                    household: {
-                        include: {
-                            locations: {
-                                include: { zones: { include: { items: true } } }
-                            }
-                        }
-                    }
-                }
-            })
-
-            if (user && user.household) {
-                return new NextResponse(JSON.stringify({
-                    user: { id: user.id, name: user.name, householdId: user.householdId },
-                    household: user.household
-                }), {
-                    status: 200,
-                    headers: { 'Content-Type': 'application/json' }
-                })
-            }
-        }
-
-        // PRO Fallback: If no session but we have users, return the first one (for the transition)
         const defaultUser = await prisma.user.findFirst({
             include: {
                 household: {
@@ -47,7 +17,7 @@ export async function GET(request: Request) {
         })
 
         if (!defaultUser || !defaultUser.household) {
-            return new NextResponse(JSON.stringify({ error: 'No user found' }), {
+            return new NextResponse(JSON.stringify({ error: 'No user found in database' }), {
                 status: 200,
                 headers: { 'Content-Type': 'application/json' }
             })
