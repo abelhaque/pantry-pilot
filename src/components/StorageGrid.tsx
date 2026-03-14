@@ -92,33 +92,36 @@ export default function StorageGrid({ locations, searchQuery }: StorageGridProps
                     const locItems = (loc.zones ?? []).flatMap((z: any) => z.items ?? [])
                     if (locItems.length === 0 && searchQuery) return null
                     return (
-                        <Card
-                            key={loc.id}
-                            className="group hover:border-black transition-all relative bg-off-white !p-3"
-                            onClick={() => router.push(`/location/${loc.id}`)}
-                        >
-                            <div className="flex items-center justify-between mb-2">
-                                <div className="w-8 h-8 rounded-lg bg-zinc-100 flex items-center justify-center text-lg group-hover:bg-primary group-hover:text-white transition-colors">
-                                    {getLocationIcon(loc.name, loc.type)}
-                                </div>
-                                <button
-                                    onClick={(e) => { e.stopPropagation(); router.push('/household/settings') }}
-                                    className="p-1 text-zinc-300 hover:text-primary transition-all"
+                        <div key={loc.id} className="card-3d-wrap">
+                            <div className="card-3d-inner">
+                                <Card
+                                    className="group hover:border-black transition-all relative bg-off-white !p-3"
+                                    onClick={() => router.push(`/location/${loc.id}`)}
                                 >
-                                    <Pencil size={12} />
-                                </button>
+                                    <div className="flex items-center justify-between mb-2">
+                                        <div className="w-8 h-8 rounded-lg bg-zinc-100 flex items-center justify-center text-lg group-hover:bg-primary group-hover:text-white transition-colors">
+                                            {getLocationIcon(loc.name, loc.type)}
+                                        </div>
+                                        <button
+                                            onClick={(e) => { e.stopPropagation(); router.push('/household/settings') }}
+                                            className="p-1 text-zinc-300 hover:text-primary transition-all"
+                                        >
+                                            <Pencil size={12} />
+                                        </button>
+                                    </div>
+                                    <div className="overflow-hidden mb-4">
+                                        <h4 className="font-bold text-sm truncate">{loc.name}</h4>
+                                        <p className="text-[10px] text-zinc-400 font-medium">{locItems.length} items</p>
+                                    </div>
+                                    <button
+                                        onClick={(e) => { e.stopPropagation(); router.push(`/location/${loc.id}`) }}
+                                        className="absolute bottom-2 right-2 w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center shadow-md hover:scale-110 active:scale-90 transition-all z-20"
+                                    >
+                                        <Plus size={16} />
+                                    </button>
+                                </Card>
                             </div>
-                            <div className="overflow-hidden mb-4">
-                                <h4 className="font-bold text-sm truncate">{loc.name}</h4>
-                                <p className="text-[10px] text-zinc-400 font-medium">{locItems.length} items</p>
-                            </div>
-                            <button
-                                onClick={(e) => { e.stopPropagation(); router.push(`/location/${loc.id}`) }}
-                                className="absolute bottom-2 right-2 w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center shadow-md hover:scale-110 active:scale-90 transition-all z-20"
-                            >
-                                <Plus size={16} />
-                            </button>
-                        </Card>
+                        </div>
                     )
                 })}
             </div>

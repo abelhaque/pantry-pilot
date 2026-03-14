@@ -3,24 +3,24 @@
 @tailwind utilities;
 
 :root {
-  /* Sage Green Reference Palette */
-  --background: #E3EADF; /* Light Sage Green Background */
-  --foreground: #2C3A2B; /* Deep Charcoal Green for Text */
+  /* Dark Forest Green Palette - Primary Theme */
+  --background: #1A2119; /* Deep Forest Background */
+  --foreground: #FDFDFB; /* Cream White for Contrast */
   
-  --card: #FDFDFB;
-  --card-foreground: #2C3A2B;
+  --card: #2C3A2B; /* Deep Charcoal Green for Cards */
+  --card-foreground: #FDFDFB;
   
-  --popover: #ffffff;
-  --popover-foreground: #2C3A2B;
+  --popover: #2C3A2B;
+  --popover-foreground: #FDFDFB;
   
-  --primary: #8DAA81; /* Primary Green */
+  --primary: #8DAA81; /* Primary Sage Action */
   --primary-foreground: #ffffff;
   
   --secondary: #5DADE2; 
-  --secondary-foreground: #2C3A2B;
+  --secondary-foreground: #ffffff;
   
-  --muted: rgba(44, 58, 43, 0.1);
-  --muted-foreground: #4A5D48;
+  --muted: rgba(255, 255, 255, 0.1);
+  --muted-foreground: #A9B2A8;
   
   --accent: #B08D57;
   --accent-foreground: #ffffff;
@@ -28,24 +28,11 @@
   --destructive: #ef4444;
   --destructive-foreground: #fafafa;
 
-  --border: #F0F0E8;
-  --input: rgba(255, 255, 255, 0.8);
+  --border: rgba(255, 255, 255, 0.1);
+  --input: rgba(255, 255, 255, 0.05);
   --ring: #8DAA81;
 
   --radius: 20px;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #1a2119;
-    --foreground: #e3eadf;
-    
-    --card: #2c3a2b;
-    --card-foreground: #e3eadf;
-    
-    --primary: #8daa81;
-    --primary-foreground: #ffffff;
-  }
 }
 
 * {
@@ -64,33 +51,45 @@ body {
 
 @layer utilities {
   .tactile-card {
-    background: linear-gradient(to bottom, #FDFDFB, #F8F8F0);
-    border: 1px solid #F0F0E8;
+    background: linear-gradient(to bottom, #2C3A2B, #232E22);
+    border: 1px solid rgba(255, 255, 255, 0.05);
     box-shadow: 
-      6px 6px 15px rgba(44, 58, 43, 0.12), 
-      -4px -4px 15px rgba(255, 255, 255, 0.7);
+      8px 8px 20px rgba(0, 0, 0, 0.4), 
+      -4px -4px 15px rgba(255, 255, 255, 0.02);
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .tactile-card:active {
     transform: scale(0.98);
     box-shadow: 
-      2px 2px 8px rgba(44, 58, 43, 0.1), 
-      -2px -2px 8px rgba(255, 255, 255, 0.6);
+      2px 2px 8px rgba(0, 0, 0, 0.4);
   }
 
   .tactile-button {
     box-shadow: 
-      4px 4px 10px rgba(44, 58, 43, 0.15), 
-      -2px -2px 10px rgba(255, 255, 255, 0.5);
+      4px 4px 10px rgba(0, 0, 0, 0.3), 
+      -2px -2px 10px rgba(255, 255, 255, 0.05);
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .tactile-button:active {
     transform: scale(0.95);
     box-shadow: 
-      1px 1px 4px rgba(44, 58, 43, 0.1), 
-      -1px -1px 4px rgba(255, 255, 255, 0.4);
+      1px 1px 4px rgba(0, 0, 0, 0.2);
+  }
+
+  /* --- 3D Transformations --- */
+  .card-3d-wrap {
+    perspective: 1000px;
+  }
+  
+  .card-3d-inner {
+    transform-style: preserve-3d;
+    transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .card-3d-inner:hover {
+    transform: rotateY(10deg) rotateX(5deg);
   }
 
   .no-scrollbar::-webkit-scrollbar {

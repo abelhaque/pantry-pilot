@@ -7,6 +7,7 @@ import {
     Plus, Search, AlertTriangle, Settings
 } from 'lucide-react'
 import StorageGrid from '@/components/StorageGrid'
+import { ShoppingBags } from '@/components/ShoppingBags'
 
 export default function Dashboard() {
     const { household, isLoading } = useHousehold()
@@ -142,7 +143,7 @@ export default function Dashboard() {
             )}
 
             {/* --- Storage Units Section --- */}
-            <div className="space-y-4">
+            <div className="space-y-6">
                 <div className="flex items-center justify-between">
                     <h3 className="text-sm font-bold uppercase tracking-widest text-[#B08D57]">Storage Units</h3>
                     <button
@@ -153,7 +154,20 @@ export default function Dashboard() {
                     </button>
                 </div>
 
-                <StorageGrid locations={locations} searchQuery={searchQuery} />
+                {/* Hero Card: Shopping Bags */}
+                <div className="card-3d-wrap">
+                    <div className="card-3d-inner">
+                        <div onClick={() => router.push('/shopping-list')}>
+                            <ShoppingBags itemCount={shoppingListCount} />
+                        </div>
+                    </div>
+                </div>
+
+                <div className="card-3d-wrap">
+                    <div className="card-3d-inner">
+                        <StorageGrid locations={locations} searchQuery={searchQuery} />
+                    </div>
+                </div>
             </div>
         </main>
     )

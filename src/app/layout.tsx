@@ -9,6 +9,10 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata: Metadata = {
   title: "Pantry Pilot",
   description: "Collaborative Kitchen Logistics Engine",
+  icons: {
+    icon: "/app-logo.png",
+    apple: "/app-logo.png",
+  },
 };
 
 export default function RootLayout({
