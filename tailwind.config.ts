@@ -14,6 +14,7 @@ const config: Config = {
     },
     extend: {
       colors: {
+        charcoal: "#2C3A2B",
         border: "var(--border)",
         input: "var(--input)",
         ring: "var(--ring)",
