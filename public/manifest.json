@@ -1,0 +1,16 @@
+{
+  "name": "Pantry Pilot",
+  "short_name": "Pantry Pilot",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#E3EADF",
+  "theme_color": "#E3EADF",
+  "icons": [
+    {
+      "src": "/icon.png",
+      "sizes": "192x192 512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
