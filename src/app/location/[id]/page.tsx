@@ -3,12 +3,22 @@
 import { useHousehold } from '@/providers/HouseholdProvider'
 import { useParams, useRouter } from 'next/navigation'
 import { useState, useMemo } from 'react'
-import * as LucideIcons from 'lucide-react'
+import { 
+  ArrowLeft, 
+  Refrigerator, 
+  Snowflake, 
+  Archive, 
+  Plus, 
+  Minus, 
+  Move, 
+  Trash2, 
+  Search 
+} from 'lucide-react'
 import AddItem from '@/components/AddItem'
 import { getCategoryIcon, getExpiryStatus } from '@/utils/categories'
 import MoveItemModal from '@/components/MoveItemModal'
 import { Item, CATEGORIES } from '@/types'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence } from 'motion/react'
 
 export default function LocationReference() {
     const { id } = useParams()
@@ -113,7 +123,7 @@ export default function LocationReference() {
                         onClick={() => router.push('/')} 
                         className="text-[10px] font-black uppercase tracking-[0.4em] text-white/40 mb-10 flex items-center gap-2 hover:text-emerald-400 transition-colors"
                     >
-                        <LucideIcons.ArrowLeft size={16} /> Dashboard
+                        <ArrowLeft size={16} /> Dashboard
                     </button>
                     <div className="flex justify-between items-end">
                         <div>
@@ -124,9 +134,9 @@ export default function LocationReference() {
                             <h1 className="text-6xl font-black tracking-tighter uppercase leading-none">{location.name}</h1>
                         </div>
                         <div className="w-24 h-24 rounded-[36px] bg-white/5 border border-white/10 flex items-center justify-center text-5xl shadow-2xl backdrop-blur-md">
-                            {location.name.toLowerCase().includes('fridge') ? <LucideIcons.Refrigerator size={44} /> : 
-                             location.name.toLowerCase().includes('freezer') ? <LucideIcons.Snowflake size={44} /> : 
-                             <LucideIcons.Archive size={44} />}
+                            {location.name?.toLowerCase().includes('fridge') ? <Refrigerator size={44} /> : 
+                             location.name?.toLowerCase().includes('freezer') ? <Snowflake size={44} /> : 
+                             <Archive size={44} />}
                         </div>
                     </div>
                 </div>
@@ -199,23 +209,23 @@ export default function LocationReference() {
                                                         onClick={() => handleUpdateQuantity(item.id, item.quantity - 1)}
                                                         className="w-10 h-10 flex items-center justify-center hover:bg-white rounded-xl transition-all active:scale-90 text-[#1A2119]"
                                                     >
-                                                        <LucideIcons.Minus size={18} strokeWidth={3} />
+                                                        <Minus size={18} strokeWidth={3} />
                                                     </button>
                                                     <span className="text-xl font-black w-12 text-center text-[#1A2119] tabular-nums">{item.quantity}</span>
                                                     <button 
                                                         onClick={() => handleUpdateQuantity(item.id, item.quantity + 1)}
                                                         className="w-10 h-10 flex items-center justify-center hover:bg-white rounded-xl transition-all active:scale-90 text-[#1A2119]"
                                                     >
-                                                        <LucideIcons.Plus size={18} strokeWidth={3} />
+                                                        <Plus size={18} strokeWidth={3} />
                                                     </button>
                                                 </div>
 
                                                 <div className="flex gap-2">
                                                     <button onClick={() => setIsMovingItem(item)} className="w-12 h-12 flex items-center justify-center bg-white border border-[#1A2119]/5 rounded-2xl text-[#1A2119]/20 hover:text-[#1A2119] hover:shadow-lg transition-all active:scale-90">
-                                                        <LucideIcons.Move size={20} />
+                                                        <Move size={20} />
                                                     </button>
                                                     <button onClick={() => handleDeleteItem(item.id)} className="w-12 h-12 flex items-center justify-center bg-white border border-[#1A2119]/5 rounded-2xl text-[#1A2119]/20 hover:text-rose-500 hover:shadow-lg transition-all active:scale-90">
-                                                        <LucideIcons.Trash2 size={20} />
+                                                        <Trash2 size={20} />
                                                     </button>
                                                 </div>
                                             </div>
@@ -227,7 +237,7 @@ export default function LocationReference() {
                     )) : (
                         <div className="py-32 text-center animate-in fade-in zoom-in duration-700">
                            <div className="w-32 h-32 bg-[#1A2119] rounded-[48px] flex items-center justify-center text-white/10 mx-auto mb-8 shadow-2xl">
-                               <LucideIcons.Search size={64} />
+                               <Search size={64} />
                            </div>
                            <h3 className="text-3xl font-black text-[#1A2119] mb-3 uppercase tracking-tighter">No items found</h3>
                            <p className="text-[11px] font-black text-[#1A2119]/30 uppercase tracking-[0.4em]">Try clearing your zone filters</p>
@@ -243,7 +253,7 @@ export default function LocationReference() {
                         onClick={() => setIsAddingItem(true)}
                         className="w-full h-20 bg-[#1A2119] text-white rounded-[32px] font-black uppercase tracking-[0.4em] text-sm shadow-[0_30px_60px_rgba(0,0,0,0.4)] hover:bg-emerald-600 transition-all flex items-center justify-center gap-4 active:scale-95 group"
                     >
-                        <LucideIcons.Plus size={24} strokeWidth={3} className="group-hover:rotate-90 transition-transform" />
+                        <Plus size={24} strokeWidth={3} className="group-hover:rotate-90 transition-transform" />
                         Add item to {location.name}
                     </button>
                 </div>

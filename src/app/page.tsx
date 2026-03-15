@@ -1,9 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useHousehold } from '@/providers/HouseholdProvider'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence } from 'motion/react'
 import { 
   ChevronRight, 
   AlertTriangle, 
@@ -116,16 +116,19 @@ export default function Page() {
     const totalItemsCount = allItems.length
     
     const shoppingList = (household as any)?.shoppingList || []
-    const toBuyCount = shoppingList.filter((i: any) => !i.isPurchased).length
+    const toBuyCount = (shoppingList?.filter((i: any) => !i.isPurchased) || []).length
 
-    const threeDaysFromNow = new Date()
-    threeDaysFromNow.setDate(new Date().getDate() + 3)
-    
-    const expiringSoonCount = allItems.filter(item => {
+    // Use static value for initial render to avoid hydration mismatch, or better: defer calculation
+    const [hydrated, setHydrated] = useState(false)
+    useEffect(() => { setHydrated(true) }, [])
+
+    const expiringSoonCount = hydrated ? allItems.filter(item => {
         const expiry = item.expiry_date || item.expiry
         if (!expiry) return false
+        const threeDaysFromNow = new Date()
+        threeDaysFromNow.setDate(new Date().getDate() + 3)
         return new Date(expiry) <= threeDaysFromNow
-    }).length
+    }).length : 0
 
     const lowStockCount = allItems.filter(item => item.quantity <= (item.low_stock_threshold || 1)).length
 

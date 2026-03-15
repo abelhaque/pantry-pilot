@@ -3,14 +3,14 @@
 import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { useHousehold } from '@/providers/HouseholdProvider'
-import { motion, AnimatePresence } from 'framer-motion'
-import * as LucideIcons from 'lucide-react'
+import { motion, AnimatePresence } from 'motion/react'
 import { 
   Search, 
   ChevronRight, 
   Package,
   MapPin,
-  ArrowLeft
+  ArrowLeft,
+  X
 } from 'lucide-react'
 import { VoiceInput } from '@/components/VoiceInput'
 import { CATEGORIES } from '@/types'
@@ -91,7 +91,7 @@ export default function PantryPage() {
                         onClick={() => router.push('/')} 
                         className="text-[10px] font-black uppercase tracking-[0.4em] text-white/40 mb-10 flex items-center gap-2 hover:text-emerald-400 transition-colors"
                     >
-                        <LucideIcons.ArrowLeft size={16} /> Dashboard
+                        <ArrowLeft size={16} /> Dashboard
                     </button>
                     <div className="flex justify-between items-end mb-10">
                         <div>
@@ -149,7 +149,7 @@ export default function PantryPage() {
                                             className="w-full text-left bg-white rounded-[32px] p-6 border border-[#1A2119]/5 shadow-sm group relative overflow-hidden flex items-center gap-5 transition-all"
                                         >
                                             <div className="w-14 h-14 rounded-2xl bg-[#F9F7F2] border border-[#1A2119]/5 flex items-center justify-center text-2xl group-hover:bg-[#1A2119] group-hover:text-white transition-all duration-500 shadow-inner">
-                                                {CATEGORIES.find(c => c.name === item.storageCategory)?.icon || '📦'}
+                                                {CATEGORIES.find(c => c.name === item.shoppingCategory)?.icon || '📦'}
                                             </div>
                                             
                                             <div className="flex-1 min-w-0">
