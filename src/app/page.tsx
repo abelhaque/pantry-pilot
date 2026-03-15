@@ -10,23 +10,42 @@ import {
   Activity, 
   Package, 
   Plus, 
-  X
+  X,
+  Warehouse,
+  ClipboardList,
+  Refrigerator,
+  Snowflake,
+  Archive,
+  MoreHorizontal
 } from 'lucide-react'
 import { CATEGORIES, OFFICIAL_ICONS } from '@/types'
+
+// --- Core Units Configuration ---
+const CORE_UNITS_CONFIG = [
+    { name: 'Fridge', icon: Refrigerator, color: 'emerald' },
+    { name: 'Freezer', icon: Snowflake, color: 'blue' },
+    { name: 'Cupboard', icon: Archive, color: 'amber' },
+    { name: 'Other', icon: MoreHorizontal, color: 'zinc' }
+]
 
 // --- Unified Storage Card Component ---
 const StorageCard = ({ 
     loc, 
     idx, 
     onAddZone, 
-    onClick 
+    onClick,
+    isPermanent = false
 }: { 
     loc: any, 
     idx: number, 
     onAddZone: (id: string) => void,
-    onClick: (id: string) => void 
+    onClick: (id: string) => void,
+    isPermanent?: boolean
 }) => {
     const count = loc.zones?.reduce((acc: number, z: any) => acc + (z.items?.length || 0), 0) || 0
+    
+    // Determine icon: Lucide component or Emoji/String
+    const IconComponent = typeof loc.icon === 'function' || (typeof loc.icon === 'object' && loc.icon !== null) ? loc.icon : null
     
     return (
         <motion.div
@@ -41,8 +60,8 @@ const StorageCard = ({
             >
                 <div className="absolute -top-32 -right-32 w-80 h-80 bg-emerald-500/10 blur-[100px] group-hover:bg-emerald-500/20 transition-all duration-700"></div>
                 
-                <div className="text-6xl group-hover:scale-110 group-hover:rotate-2 transition-transform duration-700 origin-left">
-                    {loc.icon || '📦'}
+                <div className="text-6xl group-hover:scale-110 group-hover:rotate-2 transition-transform duration-700 origin-left text-white/90">
+                    {IconComponent ? <IconComponent size={64} strokeWidth={1.5} /> : (loc.icon || '📦')}
                 </div>
                 
                 <div>
@@ -50,7 +69,7 @@ const StorageCard = ({
                         {loc.name}
                     </h3>
                     <div className="flex items-center gap-2.5">
-                        <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.9)] animate-pulse"></span>
+                        <span className={`w-2.5 h-2.5 rounded-full ${count > 0 ? 'bg-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.9)]' : 'bg-white/10'} animate-pulse`}></span>
                         <span className="text-white/40 text-[11px] font-bold uppercase tracking-[0.3em]">
                             {count} Items
                         </span>
@@ -63,7 +82,12 @@ const StorageCard = ({
                 whileTap={{ scale: 0.9 }}
                 onClick={(e) => {
                     e.stopPropagation()
-                    onAddZone(loc.id)
+                    if (loc.id && loc.id !== 'temp') {
+                        onAddZone(loc.id)
+                    } else {
+                        // If it's a permanent placeholder but not in DB yet, we might need a different action
+                        // For now, we assume refresh() will have hydrated them or they are placeholders for navigation
+                    }
                 }}
                 className="absolute top-8 right-8 w-12 h-12 rounded-[18px] bg-white/5 border border-white/10 flex items-center justify-center text-white/50 hover:bg-emerald-500 hover:text-white hover:border-emerald-400 transition-all shadow-xl backdrop-blur-sm opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 duration-300"
             >
@@ -139,8 +163,31 @@ export default function Page() {
         }
     })
 
-    // Filter locations for the grid: All except "Shopping Bags"
-    const gridLocations = household?.locations?.filter(l => !l.name.toLowerCase().includes('shopping bags')) || []
+    // --- Core Grid Initialization ---
+    // We want the Fridge, Freezer, Cupboard, and Other to ALWAYS be present in a 2x2.
+    // We'll map existing locations to these or use placeholders.
+    const coreGrid = CORE_UNITS_CONFIG.map(config => {
+        const existing = household?.locations?.find(l => l.name.toLowerCase() === config.name.toLowerCase())
+        if (existing) {
+            return {
+                ...existing,
+                icon: config.icon // Use Lucide icon instead of emoji
+            }
+        }
+        // Placeholder for missing core unit
+        return {
+            id: 'temp-' + config.name,
+            name: config.name,
+            icon: config.icon,
+            zones: []
+        }
+    })
+
+    // Additional custom locations (excluding core and shopping bags)
+    const customLocations = household?.locations?.filter(l => 
+        !l.name.toLowerCase().includes('shopping bags') &&
+        !CORE_UNITS_CONFIG.some(c => c.name.toLowerCase() === l.name.toLowerCase())
+    ) || []
 
     const handleCreateLocation = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -200,15 +247,15 @@ export default function Page() {
                     </div>
                 </div>
 
-                {/* Summary Cards */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
+                {/* Summary Cards - ALWAYS SIDE-BY-SIDE */}
+                <div className="grid grid-cols-2 gap-6 mb-8">
                     <motion.div
                         initial={{ opacity: 0, scale: 0.95 }}
                         animate={{ opacity: 1, scale: 1 }}
-                        className="relative overflow-hidden rounded-[40px] p-8 bg-white border border-[#1A2119]/5 shadow-[0_25px_50px_rgba(0,0,0,0.04)] flex flex-col justify-between min-h-[200px]"
+                        className="relative overflow-hidden rounded-[40px] p-8 bg-white border border-[#1A2119]/5 shadow-[0_25px_50px_rgba(0,0,0,0.04)] flex flex-col justify-between min-h-[220px]"
                     >
-                        <div className="absolute top-0 right-0 p-8 opacity-[0.04] text-[#1A2119]">
-                            <Package size={100} />
+                        <div className="absolute top-8 right-8 text-[#1A2119] opacity-20">
+                            <Warehouse size={40} strokeWidth={2.5} />
                         </div>
                         <div>
                             <p className="text-[#1A2119]/40 font-bold text-[11px] uppercase tracking-[0.25em] mb-2">Inventory Total</p>
@@ -216,7 +263,7 @@ export default function Page() {
                                 {totalItemsCount}
                             </h2>
                         </div>
-                        <p className="text-[#1A2119]/30 text-xs font-semibold">Active items across all locations</p>
+                        <p className="text-[#1A2119]/30 text-[10px] font-bold uppercase tracking-wider">Active items stored</p>
                     </motion.div>
 
                     <motion.button
@@ -225,8 +272,11 @@ export default function Page() {
                         whileHover={{ y: -6, boxShadow: "0 40px 80px rgba(0,0,0,0.15)" }}
                         whileTap={{ scale: 0.98 }}
                         onClick={() => router.push('/shopping-list')}
-                        className="relative overflow-hidden rounded-[40px] p-8 bg-[#1A2119] border border-white/5 shadow-2xl flex flex-col justify-between min-h-[200px] text-left group"
+                        className="relative overflow-hidden rounded-[40px] p-8 bg-[#1A2119] border border-white/5 shadow-2xl flex flex-col justify-between min-h-[220px] text-left group"
                     >
+                        <div className="absolute top-8 right-8 text-emerald-500">
+                            <ClipboardList size={40} strokeWidth={2.5} />
+                        </div>
                         <div className="absolute -top-16 -right-16 w-48 h-48 bg-emerald-500/20 blur-[60px] group-hover:bg-emerald-500/30 transition-all duration-500"></div>
                         <div>
                             <p className="text-white/40 font-bold text-[11px] uppercase tracking-[0.25em] mb-2">To Buy List</p>
@@ -293,13 +343,29 @@ export default function Page() {
                     </button>
                 </motion.div>
 
-                {/* Storage Grid */}
+                {/* Storage Grid - 2x2 CORE GRID + Custom Units */}
                 <div className="grid grid-cols-2 gap-8 mb-12">
-                    {gridLocations.map((loc, idx) => (
+                    {/* Core Four */}
+                    {coreGrid.map((loc, idx) => (
+                        <StorageCard 
+                            key={loc.name} 
+                            loc={loc} 
+                            idx={idx} 
+                            isPermanent
+                            onAddZone={(id) => {
+                                setSelectedLocForZone(id)
+                                setIsAddingZone(true)
+                            }}
+                            onClick={(id) => id && !id.startsWith('temp-') && router.push(`/location/${id}`)}
+                        />
+                    ))}
+
+                    {/* Custom units */}
+                    {customLocations.map((loc, idx) => (
                         <StorageCard 
                             key={loc.id} 
                             loc={loc} 
-                            idx={idx} 
+                            idx={idx + 4} 
                             onAddZone={(id) => {
                                 setSelectedLocForZone(id)
                                 setIsAddingZone(true)
@@ -312,7 +378,7 @@ export default function Page() {
                     <motion.button
                         initial={{ opacity: 0, y: 30 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.2 + gridLocations.length * 0.05 }}
+                        transition={{ delay: 0.2 + (coreGrid.length + customLocations.length) * 0.05 }}
                         whileHover={{ y: -8, boxShadow: "0 45px 90px rgba(0,0,0,0.08)" }}
                         whileTap={{ scale: 0.98 }}
                         onClick={() => setIsAddingLocation(true)}
@@ -322,7 +388,7 @@ export default function Page() {
                             <Plus size={32} />
                         </div>
                         <span className="text-[12px] font-black uppercase tracking-[0.4em] text-[#1A2119]/30 group-hover:text-[#1A2119]">
-                            Add Storage Unit
+                            Add Custom Unit
                         </span>
                     </motion.button>
                 </div>
