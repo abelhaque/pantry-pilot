@@ -20,13 +20,13 @@ export default function LocationReference() {
     const [isMovingItem, setIsMovingItem] = useState<Item | null>(null)
 
     const location = useMemo(() => {
-        return household?.locations.find(l => l.id === id)
+        return household?.locations?.find(l => l.id === id)
     }, [household, id])
 
     // --- Data Calculations ---
     const allItems = useMemo(() => {
         if (!location) return []
-        let items = location.zones.flatMap(z => z.items.map(i => ({ ...i, zoneName: z.name, zoneId: z.id })))
+        let items = (location.zones || []).flatMap(z => (z.items || []).map(i => ({ ...i, zoneName: z.name, zoneId: z.id })))
         if (activeZoneFilter !== 'all') {
             items = items.filter(i => i.zoneId === activeZoneFilter)
         }
@@ -141,7 +141,7 @@ export default function LocationReference() {
                     >
                         All Zones
                     </button>
-                    {location.zones.map(zone => (
+                    {location.zones?.map(zone => (
                         <button 
                             key={zone.id}
                             onClick={() => setActiveZoneFilter(zone.id)}

@@ -24,7 +24,7 @@ export default function PantryPage() {
     const allItems = useMemo(() => {
         if (!household?.locations) return []
         return household.locations.flatMap(loc => 
-            loc.zones.flatMap(zone => 
+            (loc.zones || []).flatMap(zone => 
                 (zone.items || []).map(item => ({
                     ...item,
                     locationName: loc.name,

@@ -112,7 +112,7 @@ export default function Page() {
     }
 
     // --- Data Calculations ---
-    const allItems = household?.locations?.flatMap(l => l.zones.flatMap(z => z.items || [])) || []
+    const allItems = household?.locations?.flatMap(l => (l.zones || []).flatMap(z => z.items || [])) || []
     const totalItemsCount = allItems.length
     
     const shoppingList = (household as any)?.shoppingList || []
