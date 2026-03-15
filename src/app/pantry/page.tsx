@@ -19,6 +19,9 @@ export default function PantryPage() {
     const router = useRouter()
     const { household, isLoading } = useHousehold()
     const [searchQuery, setSearchQuery] = useState('')
+    const [hydrated, setHydrated] = useState(false)
+
+    useEffect(() => { setHydrated(true) }, [])
 
     // --- Filtering Logic ---
     const allItems = useMemo(() => {
@@ -52,9 +55,9 @@ export default function PantryPage() {
 
     // --- Aisle Grouping ---
     const groupedItems = useMemo(() => {
-        const groups: Record<string, typeof filteredItems> = {}
+        const groups: Record<string, typeof filteredItems> = {};
         
-        (filteredItems || []).forEach(item => { // Harden filteredItems loop
+        (filteredItems || []).forEach(item => {
             const aisle = item.shoppingCategory || 'Other'
             if (!groups[aisle]) groups[aisle] = []
             groups[aisle].push(item)
@@ -76,13 +79,11 @@ export default function PantryPage() {
         }))
     }, [filteredItems])
 
-    if (isLoading) {
-        return (
-            <div className="min-h-screen bg-[#1A2119] flex items-center justify-center">
-                <div className="w-8 h-8 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
-            </div>
-        )
+    if (isLoading || !hydrated) {
+        return <div className="flex items-center justify-center min-h-screen text-[#1A2119] font-bold">Loading Pantry...</div>
     }
+
+    if (!household) return null
 
     return (
         <main className="min-h-screen bg-[#F9F7F2] pb-32">
