@@ -7,7 +7,8 @@ interface HouseholdContextType {
     household: Household | null
     isLoading: boolean
     refresh: () => Promise<void>
-    createLocation: (name: string, type: string) => Promise<void>
+    createLocation: (name: string, icon: string, type: string) => Promise<void>
+    createZone: (name: string, locationId: string) => Promise<void>
 }
 
 const HouseholdContext = createContext<HouseholdContextType>({
@@ -15,6 +16,7 @@ const HouseholdContext = createContext<HouseholdContextType>({
     isLoading: true,
     refresh: async () => { },
     createLocation: async () => { },
+    createZone: async () => { },
 })
 
 export const useHousehold = () => useContext(HouseholdContext)
@@ -23,7 +25,7 @@ export function HouseholdProvider({ children }: { children: React.ReactNode }) {
     const [household, setHousehold] = useState<Household | null>(null)
     const [isLoading, setIsLoading] = useState(true)
 
-    const fetchHousehold = async () => {
+    const refresh = async () => {
         try {
             const res = await fetch('/api/init', {
                 method: 'GET',
@@ -45,20 +47,28 @@ export function HouseholdProvider({ children }: { children: React.ReactNode }) {
     }
 
     useEffect(() => {
-        fetchHousehold()
+        refresh()
     }, [])
 
-    const createLocation = async (name: string, type: string) => {
+    const createLocation = async (name: string, icon: string, type: string) => {
         if (!household) return
         await fetch('/api/locations', {
             method: 'POST',
-            body: JSON.stringify({ name, type, householdId: household.id })
+            body: JSON.stringify({ name, icon, type, householdId: household.id })
         })
-        await fetchHousehold()
+        await refresh()
+    }
+
+    const createZone = async (name: string, locationId: string) => {
+        await fetch('/api/zones', {
+            method: 'POST',
+            body: JSON.stringify({ name, locationId })
+        })
+        await refresh()
     }
 
     return (
-        <HouseholdContext.Provider value={{ household, isLoading, refresh: fetchHousehold, createLocation }}>
+        <HouseholdContext.Provider value={{ household, isLoading, refresh, createLocation, createZone }}>
             {children}
         </HouseholdContext.Provider>
     )

@@ -36,6 +36,7 @@ model Household {
 model Location {
   id          String    @id @default(cuid())
   name        String
+  icon        String?
   type        String    @default("storage") // fridge, freezer, pantry, etc.
   householdId String
   household   Household @relation(fields: [householdId], references: [id], onDelete: Cascade)

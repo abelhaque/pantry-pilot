@@ -15,7 +15,7 @@ export const Navbar = () => {
 
   const navItems = [
     { label: 'Home', icon: LayoutGrid, href: '/' },
-    { label: 'Pantry', icon: Package, href: '/inventory' },
+    { label: 'Pantry', icon: Package, href: '/pantry' },
     { label: 'List', icon: ShoppingCart, href: '/shopping-list' },
     { label: 'Cook', icon: ChefHat, href: '/cook' },
   ]

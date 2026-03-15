@@ -3,6 +3,7 @@ export interface Household {
   name: string;
   invite_code?: string;
   locations: Location[];
+  shoppingList: ShoppingItem[];
 }
 
 export interface User {

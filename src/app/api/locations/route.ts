@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma'
 
 export async function POST(request: Request) {
     try {
-        const { name, type, householdId } = await request.json()
+        const { name, icon, type, householdId } = await request.json()
 
         if (!name || !householdId) {
             return new NextResponse(JSON.stringify({ error: 'Missing required fields' }), { status: 400, headers: { 'Content-Type': 'application/json' } })
@@ -12,6 +12,7 @@ export async function POST(request: Request) {
         const location = await prisma.location.create({
             data: {
                 name,
+                icon,
                 type,
                 householdId,
                 zones: {

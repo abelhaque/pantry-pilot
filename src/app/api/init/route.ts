@@ -13,7 +13,8 @@ export async function GET(request: Request) {
                     include: {
                         locations: {
                             include: { zones: { include: { items: true } } }
-                        }
+                        },
+                        shoppingList: true
                     }
                 }
             }
@@ -31,7 +32,8 @@ export async function GET(request: Request) {
             include: {
                 locations: {
                     include: { zones: { include: { items: true } } }
-                }
+                },
+                shoppingList: true
             }
         })
 
