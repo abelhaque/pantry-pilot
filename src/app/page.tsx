@@ -66,9 +66,9 @@ const StorageCard = ({
                         {loc.name}
                     </h3>
                     <div className="flex items-center gap-2.5">
-                        <span className={`w-2.5 h-2.5 rounded-full ${count > 0 ? 'bg-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.9)]' : 'bg-white/10'} animate-pulse`}></span>
+                        <span className={`w-2.5 h-2.5 rounded-full ${(count || 0) > 0 ? 'bg-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.9)]' : 'bg-white/10'} animate-pulse`}></span>
                         <span className="text-white/40 text-[11px] font-bold uppercase tracking-[0.3em]">
-                            {count} Items
+                            {count || 0} Items
                         </span>
                     </div>
                 </div>
@@ -132,7 +132,7 @@ export default function Page() {
 
     const lowStockCount = allItems.filter(item => item.quantity <= (item.low_stock_threshold || 1)).length
 
-    const shoppingBags = household?.locations?.find(l => l.name.toLowerCase().includes('shopping bags'))
+    const shoppingBags = household?.locations?.find(l => l.name?.toLowerCase().includes('shopping bags'))
     const shoppingBagsItems = shoppingBags?.zones?.flatMap(z => z.items || []) || []
     
     // Group by Aisle (Category)
@@ -162,7 +162,7 @@ export default function Page() {
 
     // --- Core Grid Initialization ---
     const coreGrid = CORE_UNITS_CONFIG.map(config => {
-        const existing = household?.locations?.find(l => l.name.toLowerCase() === config.name.toLowerCase())
+        const existing = household?.locations?.find(l => l.name?.toLowerCase() === config.name?.toLowerCase())
         if (existing) {
             return { ...existing, icon: config.icon }
         }
@@ -170,8 +170,9 @@ export default function Page() {
     })
 
     const customLocations = household?.locations?.filter(l => 
+        l.name && 
         !l.name.toLowerCase().includes('shopping bags') &&
-        !CORE_UNITS_CONFIG.some(c => c.name.toLowerCase() === l.name.toLowerCase())
+        !CORE_UNITS_CONFIG.some(c => c.name?.toLowerCase() === l.name?.toLowerCase())
     ) || []
 
     const handleCreateLocation = async (e: React.FormEvent) => {

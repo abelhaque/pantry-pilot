@@ -130,7 +130,7 @@ export default function CookHub() {
                 <div>
                   <h3 className={`font-black text-lg ${plan ? 'text-white' : 'text-[#2C3A2B]'}`}>{slot}</h3>
                   <p className={`text-[10px] font-bold uppercase tracking-widest ${plan ? 'text-white/60' : 'text-[#2C3A2B]/40'}`}>
-                    {plan ? plan.recipeName : 'Nothing planned yet'}
+                    {plan?.recipeName || 'Nothing planned yet'}
                   </p>
                 </div>
               </div>

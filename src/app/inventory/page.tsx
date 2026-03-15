@@ -37,12 +37,12 @@ export default function InventoryDeepDive() {
                 {loc.type === 'fridge' ? '❄️' : loc.type === 'freezer' ? '🧊' : '📦'}
               </div>
               <div>
-                <h3 className="text-xl font-black text-[#2C3A2B]">{loc.name}</h3>
+                <h3 className="text-xl font-black text-[#2C3A2B]">{loc.name || 'Unknown Location'}</h3>
                 <div className="flex items-center gap-2 mt-1">
-                  <span className="text-[10px] font-black uppercase tracking-widest text-[#2C3A2B]/40">{loc.type}</span>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-[#2C3A2B]/40">{loc.type || 'storage'}</span>
                   <span className="w-1 h-1 rounded-full bg-[#2C3A2B]/10" />
                   <span className="text-[10px] font-black uppercase tracking-widest text-[#8DAA81]">
-                    {loc.zones.reduce((acc, z) => acc + z.items.length, 0)} Items
+                    {(loc.zones || []).reduce((acc, z) => acc + (z.items?.length || 0), 0)} Items
                   </span>
                 </div>
               </div>
@@ -70,14 +70,14 @@ export default function InventoryDeepDive() {
               <div className="flex gap-6 mt-4">
                  <div>
                     <div className="text-2xl font-black">
-                      {household.locations.length}
+                      {household.locations?.length || 0}
                     </div>
                     <div className="text-[9px] font-bold uppercase tracking-widest text-white/50">Locations</div>
                  </div>
                  <div className="w-px h-8 bg-white/10" />
                  <div>
                     <div className="text-2xl font-black text-[#8DAA81]">
-                      {household.locations.flatMap(l => l.zones.flatMap(z => z.items)).length}
+                      {(household.locations || []).flatMap(l => (l.zones || []).flatMap(z => z.items || [])).length}
                     </div>
                     <div className="text-[9px] font-bold uppercase tracking-widest text-white/40">Total Items</div>
                  </div>
