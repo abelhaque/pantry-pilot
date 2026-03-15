@@ -4,6 +4,7 @@ import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { useHousehold } from '@/providers/HouseholdProvider'
 import { motion, AnimatePresence } from 'framer-motion'
+import * as LucideIcons from 'lucide-react'
 import { 
   Search, 
   ChevronRight, 
@@ -51,7 +52,7 @@ export default function PantryPage() {
         const groups: Record<string, typeof filteredItems> = {}
         
         filteredItems.forEach(item => {
-            const aisle = item.shoppingCategory || 'Uncategorized'
+            const aisle = item.shoppingCategory || 'Other'
             if (!groups[aisle]) groups[aisle] = []
             groups[aisle].push(item)
         })
@@ -82,21 +83,28 @@ export default function PantryPage() {
 
     return (
         <main className="min-h-screen bg-[#F9F7F2] pb-32">
-            {/* Sticky Header with Search */}
-            <div className="sticky top-0 z-50 bg-[#F9F7F2]/80 backdrop-blur-xl border-b border-[#1A2119]/5 px-6 py-8">
-                <div className="max-w-5xl mx-auto space-y-6">
-                    <div className="flex items-center gap-4">
-                        <motion.button
-                            whileHover={{ scale: 1.1 }}
-                            whileTap={{ scale: 0.9 }}
-                            onClick={() => router.push('/')}
-                            className="w-12 h-12 rounded-2xl bg-white border border-[#1A2119]/5 shadow-sm flex items-center justify-center text-[#1A2119]/40 hover:text-[#1A2119] transition-colors"
-                        >
-                            <ArrowLeft size={20} />
-                        </motion.button>
+            {/* Premium Header with Search */}
+            <header className="bg-[#1A2119] text-white pt-16 pb-12 px-8 relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-96 h-96 bg-emerald-500/10 blur-[100px] -mr-32 -mt-32"></div>
+                <div className="max-w-5xl mx-auto relative z-10">
+                    <button 
+                        onClick={() => router.push('/')} 
+                        className="text-[10px] font-black uppercase tracking-[0.4em] text-white/40 mb-10 flex items-center gap-2 hover:text-emerald-400 transition-colors"
+                    >
+                        <LucideIcons.ArrowLeft size={16} /> Dashboard
+                    </button>
+                    <div className="flex justify-between items-end mb-10">
                         <div>
-                            <h1 className="text-2xl font-black text-[#1A2119] tracking-tight leading-none">Pantry Search</h1>
-                            <p className="text-[10px] font-bold text-[#1A2119]/40 uppercase tracking-[0.2em] mt-1">Real-time Inventory Filter</p>
+                            <div className="flex items-center gap-3 mb-2">
+                                <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"></span>
+                                <p className="text-emerald-500/60 font-black text-[10px] uppercase tracking-[0.3em]">
+                                    {searchQuery ? `SEARCH RESULTS FOR "${searchQuery}"` : "GLOBAL PANTRY INVENTORY"}
+                                </p>
+                            </div>
+                            <h1 className="text-6xl font-black tracking-tighter uppercase leading-none">PANTRY</h1>
+                        </div>
+                        <div className="w-24 h-24 rounded-[36px] bg-white/5 border border-white/10 flex items-center justify-center text-white/20 shadow-2xl backdrop-blur-md">
+                            <Search size={44} strokeWidth={2.5} />
                         </div>
                     </div>
 
@@ -104,13 +112,13 @@ export default function PantryPage() {
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         placeholder="Search by name, category, or aisle..."
-                        iconLeft={<Search size={20} />}
+                        iconLeft={<Search size={22} className="text-white/20" />}
                         clearable
                         onClear={() => setSearchQuery('')}
-                        className="shadow-[0_20px_40px_rgba(0,0,0,0.03)]"
+                        className="shadow-2xl border-white/10 bg-white/5 text-white placeholder:text-white/20"
                     />
                 </div>
-            </div>
+            </header>
 
             <div className="max-w-5xl mx-auto px-6 mt-8">
                 <AnimatePresence mode="popLayout">
