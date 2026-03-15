@@ -627,7 +627,7 @@ export default function App() {
     return { id: 'bypass-user', email: 'guest@example.com', household_id: 'bypass-household', household_name: 'Our Home' };
   });
   const [household, setHousehold] = useState<Household | null>(() => {
-    return { id: 'bypass-household', name: 'Our Home', invite_code: 'HOME-001', locations: [] };
+    return { id: 'bypass-household', name: 'Our Home', invite_code: 'HOME-001', locations: [], shoppingList: [] };
   });
   const [isHouseholdSettingsOpen, setIsHouseholdSettingsOpen] = useState(false);
   const [onboardingStep, setOnboardingStep] = useState<'choice' | 'create' | 'join'>('choice');
