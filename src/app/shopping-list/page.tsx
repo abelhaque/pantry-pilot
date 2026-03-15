@@ -219,7 +219,7 @@ export default function ShoppingList() {
         })
 
     // store name list for filter pills
-    const storeNames = stores.map(s => s.name)
+    const storeNames = (stores || []).map(s => s.name)
 
     return (
         <main className="max-w-5xl mx-auto px-6 pt-6 pb-32 space-y-8">

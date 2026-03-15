@@ -22,9 +22,12 @@ export default function PantryPage() {
 
     // --- Filtering Logic ---
     const allItems = useMemo(() => {
+        // Harden access to household.locations
         if (!household?.locations) return []
-        return household.locations.flatMap(loc => 
+        return (household.locations || []).flatMap(loc => 
+            // Harden access to loc.zones
             (loc.zones || []).flatMap(zone => 
+                // Harden access to zone.items
                 (zone.items || []).map(item => ({
                     ...item,
                     locationName: loc.name,
@@ -39,10 +42,10 @@ export default function PantryPage() {
         const query = searchQuery.toLowerCase().trim()
         if (!query) return allItems
 
-        return allItems.filter(item => {
-            const nameMatch = item.name.toLowerCase().includes(query)
-            const catMatch = (item.storageCategory || '').toLowerCase().includes(query)
-            const aisleMatch = (item.shoppingCategory || '').toLowerCase().includes(query)
+        return (allItems || []).filter(item => { // Harden allItems loop
+            const nameMatch = (item.name || '').toLowerCase().includes(query) // Harden item.name
+            const catMatch = (item.storageCategory || '').toLowerCase().includes(query) // Harden item.storageCategory
+            const aisleMatch = (item.shoppingCategory || '').toLowerCase().includes(query) // Harden item.shoppingCategory
             return nameMatch || catMatch || aisleMatch
         })
     }, [allItems, searchQuery])
@@ -51,7 +54,7 @@ export default function PantryPage() {
     const groupedItems = useMemo(() => {
         const groups: Record<string, typeof filteredItems> = {}
         
-        filteredItems.forEach(item => {
+        (filteredItems || []).forEach(item => { // Harden filteredItems loop
             const aisle = item.shoppingCategory || 'Other'
             if (!groups[aisle]) groups[aisle] = []
             groups[aisle].push(item)
@@ -59,7 +62,7 @@ export default function PantryPage() {
 
         // Sort groups by CATEGORIES order
         return Object.keys(groups).sort((a, b) => {
-            const order = CATEGORIES.map(c => c.name)
+            const order = (CATEGORIES || []).map(c => c.name) // Harden CATEGORIES loop
             const indexA = order.indexOf(a as any)
             const indexB = order.indexOf(b as any)
             if (indexA === -1 && indexB === -1) return a.localeCompare(b)
@@ -68,7 +71,7 @@ export default function PantryPage() {
             return indexA - indexB
         }).map(name => ({
             name,
-            icon: CATEGORIES.find(c => c.name === name)?.icon || '📦',
+            icon: (CATEGORIES || []).find(c => c.name === name)?.icon || '📦', // Harden CATEGORIES find
             items: groups[name]
         }))
     }, [filteredItems])
@@ -122,8 +125,8 @@ export default function PantryPage() {
 
             <div className="max-w-5xl mx-auto px-6 mt-8">
                 <AnimatePresence mode="popLayout">
-                    {groupedItems.length > 0 ? (
-                        groupedItems.map((group, gIdx) => (
+                    {(groupedItems || []).length > 0 ? ( // Harden groupedItems length check
+                        (groupedItems || []).map((group, gIdx) => ( // Harden groupedItems loop
                             <motion.section 
                                 key={group.name}
                                 initial={{ opacity: 0, y: 20 }}
@@ -135,12 +138,12 @@ export default function PantryPage() {
                                     <span className="text-2xl">{group.icon}</span>
                                     <h2 className="text-lg font-black text-[#1A2119] tracking-tight">{group.name}</h2>
                                     <span className="bg-[#1A2119]/5 text-[#1A2119]/40 text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-widest">
-                                        {group.items.length} {group.items.length === 1 ? 'Item' : 'Items'}
+                                        {(group.items || []).length} {(group.items || []).length === 1 ? 'Item' : 'Items'}
                                     </span>
                                 </div>
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    {group.items.map((item, iIdx) => (
+                                    {(group.items || []).map((item, iIdx) => ( // Harden group.items loop
                                         <motion.button
                                             key={item.id}
                                             whileHover={{ y: -4, boxShadow: "0 20px 40px rgba(0,0,0,0.05)" }}
