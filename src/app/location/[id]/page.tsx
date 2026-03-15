@@ -12,7 +12,8 @@ import {
   Minus, 
   Move, 
   Trash2, 
-  Search 
+  Search,
+  AlertTriangle
 } from 'lucide-react'
 import AddItem from '@/components/AddItem'
 import { getCategoryIcon, getExpiryStatus } from '@/utils/categories'
