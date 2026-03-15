@@ -2,7 +2,11 @@
 
 import { useHousehold } from '@/providers/HouseholdProvider'
 import { useRouter } from 'next/navigation'
-import * as LucideIcons from 'lucide-react'
+import { 
+  ChevronRight, 
+  Plus, 
+  Package 
+} from 'lucide-react'
 
 export default function InventoryDeepDive() {
   const { household, isLoading } = useHousehold()
@@ -44,7 +48,7 @@ export default function InventoryDeepDive() {
               </div>
             </div>
             <div className="w-12 h-12 rounded-full border border-black/5 flex items-center justify-center text-[#2C3A2B]/20 group-hover:text-[#2C3A2B] group-hover:bg-white transition-all">
-              <LucideIcons.ChevronRight size={24} />
+              <ChevronRight size={24} />
             </div>
           </div>
         ))}
@@ -53,7 +57,7 @@ export default function InventoryDeepDive() {
           onClick={() => router.push('/')}
           className="card p-8 border-2 border-dashed border-[#2C3A2B]/10 bg-transparent flex flex-col items-center justify-center gap-3 text-[#2C3A2B]/30 hover:border-[#8DAA81] hover:text-[#8DAA81] transition-all"
         >
-          <LucideIcons.Plus size={32} />
+          <Plus size={32} />
           <span className="text-xs font-black uppercase tracking-widest">Add Storage Unit</span>
         </button>
       </section>
@@ -81,7 +85,7 @@ export default function InventoryDeepDive() {
            </div>
            <div className="w-20 h-20 rounded-full bg-[#8DAA81]/20 absolute -right-4 -top-4 blur-3xl" />
            <div className="w-20 h-20 rounded-full bg-white/5 flex items-center justify-center">
-              <LucideIcons.Package size={40} className="text-white/20" />
+              <Package size={40} className="text-white/20" />
            </div>
         </div>
       </section>

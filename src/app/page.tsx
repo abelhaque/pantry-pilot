@@ -18,7 +18,7 @@ import {
   Archive,
   MoreHorizontal
 } from 'lucide-react'
-import { CATEGORIES, OFFICIAL_ICONS } from '@/types'
+import { CATEGORIES } from '@/types'
 
 // --- Core Units Configuration ---
 const CORE_UNITS_CONFIG = [
@@ -40,9 +40,9 @@ const StorageCard = ({
     onAddZone: (id: string) => void,
     onClick: (id: string) => void 
 }) => {
-    const count = loc.zones?.reduce((acc: number, z: any) => acc + (z.items?.length || 0), 0) || 0
+    const count = (loc.zones || []).reduce((acc: number, z: any) => acc + (z.items?.length || 0), 0) || 0
     const IconComponent = typeof loc.icon === 'function' ? loc.icon : null
-    const isPlaceholder = loc.id && loc.id.startsWith('temp-')
+    const isPlaceholder = loc.id && typeof loc.id === 'string' && loc.id.startsWith('temp-')
 
     return (
         <motion.div
@@ -136,7 +136,7 @@ export default function Page() {
     const shoppingBagsItems = shoppingBags?.zones?.flatMap(z => z.items || []) || []
     
     // Group by Aisle (Category)
-    const aisleGroups = shoppingBagsItems.reduce((acc, item) => {
+    const aisleGroups = (shoppingBagsItems || []).reduce((acc, item) => {
         const cat = item.shoppingCategory || 'Other'
         if (!acc[cat]) acc[cat] = []
         acc[cat].push(item)

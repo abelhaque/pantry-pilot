@@ -1,8 +1,16 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
-import { ChefHat, Calendar, ChevronLeft, ChevronRight, Plus, UtensilsCrossed, Edit2 } from 'lucide-react'
+import { 
+  ChefHat, 
+  Calendar, 
+  ChevronLeft, 
+  ChevronRight, 
+  Plus, 
+  UtensilsCrossed, 
+  Edit2 
+} from 'lucide-react'
 import { useHousehold } from '@/providers/HouseholdProvider'
+import { motion, AnimatePresence } from 'motion/react'
 
 interface MealPlan {
   id: string
@@ -17,15 +25,18 @@ export default function CookHub() {
   const [selectedDate, setSelectedDate] = useState(new Date())
   const [mealPlans, setMealPlans] = useState<MealPlan[]>([])
   
+  const [hydrated, setHydrated] = useState(false)
+  useEffect(() => { setHydrated(true) }, [])
+
   const fetchMealPlans = async () => {
-    if (!household) return
+    if (!household || !hydrated) return
     const res = await fetch(`/api/meal-plans?householdId=${household.id}&date=${selectedDate.toISOString()}`)
     if (res.ok) setMealPlans(await res.json())
   }
 
   useEffect(() => {
-    fetchMealPlans()
-  }, [household, selectedDate])
+    if (hydrated) fetchMealPlans()
+  }, [household, selectedDate, hydrated])
 
   const handleAddPlan = async (slot: string) => {
     const recipeName = prompt(`What's for ${slot}?`)
@@ -44,11 +55,11 @@ export default function CookHub() {
   }
 
   // Mock data for the horizontal carousel
-  const dates = Array.from({ length: 7 }, (_, i) => {
+  const dates = hydrated ? Array.from({ length: 7 }, (_, i) => {
     const d = new Date()
     d.setDate(d.getDate() + i - 3)
     return d
-  })
+  }) : []
 
   const slots = ['Breakfast', 'Lunch', 'Dinner', 'Snacks']
 

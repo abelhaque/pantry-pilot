@@ -1,9 +1,19 @@
 'use client'
 
 import { useHousehold } from '@/providers/HouseholdProvider'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
-import { Plus, Filter, ShoppingCart, Trash2, CheckCircle2, ArrowRight, MoreVertical, Search } from 'lucide-react'
+import { 
+  Plus, 
+  Filter, 
+  ShoppingCart, 
+  Trash2, 
+  CheckCircle2, 
+  ArrowRight, 
+  MoreVertical, 
+  Search 
+} from 'lucide-react'
+import { motion, AnimatePresence } from 'motion/react'
 
 // --- Category definitions (ported from fallback types.ts) ---
 const CATEGORIES = [
@@ -89,6 +99,9 @@ export default function ShoppingList() {
     const [isStoreSortingEnabled, setIsStoreSortingEnabled] = useState(false)
     const [selectedStoreFilter, setSelectedStoreFilter] = useState<string | null>(null)
     const [isLoading, setIsLoading] = useState(true)
+    const [hydrated, setHydrated] = useState(false)
+
+    useEffect(() => { setHydrated(true) }, [])
 
     const fetchList = async () => {
         if (!household?.id) return
@@ -190,11 +203,11 @@ export default function ShoppingList() {
     }
 
     // --- Exact fallback aisle-grouping logic ---
-    const unpurchased = items.filter(i =>
+    const unpurchased = (items || []).filter(i =>
         !i.isPurchased &&
         (!selectedStoreFilter || i.storeId === selectedStoreFilter || i.store?.id === selectedStoreFilter)
     )
-    const purchasedItems = items.filter(i => i.isPurchased)
+    const purchasedItems = (items || []).filter(i => i.isPurchased)
 
     const sortAisles = (groups: Record<string, ShoppingItem[]>) =>
         Object.keys(groups).sort((a, b) => {
