@@ -1,7 +1,8 @@
 export interface Household {
   id: string;
   name: string;
-  invite_code: string;
+  invite_code?: string;
+  locations: Location[];
 }
 
 export interface User {
@@ -16,12 +17,15 @@ export interface Location {
   name: string;
   household_id: string;
   icon?: string;
+  type: string;
+  zones: Zone[];
 }
 
 export interface Zone {
   id: string;
   name: string;
   location_id: string;
+  items: Item[];
 }
 
 export interface Item {
@@ -29,10 +33,12 @@ export interface Item {
   name: string;
   storageCategory: string;
   shoppingCategory: string;
+  category: string;
   icon: string;
   quantity: number;
   unit_type: string;
   zone_id: string;
+  expiry: string | null;
   expiry_date: string | null;
   low_stock_threshold: number;
   household_id: string;
@@ -64,12 +70,14 @@ export interface MealPlan {
 export interface LibraryItem {
   id: string;
   name: string;
-  storageCategory: string;
-  shoppingCategory: string;
-  icon: string;
-  unit_type: string;
-  store: string | null;
-  household_id: string;
+  category: string;
+  defaultUnit?: string | null;
+  storageCategory?: string;
+  shoppingCategory?: string;
+  icon?: string;
+  unit_type?: string;
+  store?: string | null;
+  household_id?: string;
 }
 
 export interface PantryState {

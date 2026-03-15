@@ -627,7 +627,7 @@ export default function App() {
     return { id: 'bypass-user', email: 'guest@example.com', household_id: 'bypass-household', household_name: 'Our Home' };
   });
   const [household, setHousehold] = useState<Household | null>(() => {
-    return { id: 'bypass-household', name: 'Our Home', invite_code: 'HOME-001' };
+    return { id: 'bypass-household', name: 'Our Home', invite_code: 'HOME-001', locations: [] };
   });
   const [isHouseholdSettingsOpen, setIsHouseholdSettingsOpen] = useState(false);
   const [onboardingStep, setOnboardingStep] = useState<'choice' | 'create' | 'join'>('choice');
@@ -3562,7 +3562,7 @@ export default function App() {
                     <button 
                       onClick={() => {
                         if (household) {
-                          navigator.clipboard.writeText(household.invite_code);
+                          navigator.clipboard.writeText(household.invite_code || '');
                           triggerHapticSuccess();
                           playSuccess();
                         }
