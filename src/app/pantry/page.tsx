@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useHousehold } from '@/providers/HouseholdProvider'
 import { motion, AnimatePresence } from 'motion/react'

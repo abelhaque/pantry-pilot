@@ -2,7 +2,7 @@
 
 import { useHousehold } from '@/providers/HouseholdProvider'
 import { useParams, useRouter } from 'next/navigation'
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { 
   ArrowLeft, 
   Refrigerator, 
@@ -25,9 +25,12 @@ export default function LocationReference() {
     const router = useRouter()
     const { household, refresh } = useHousehold()
 
-    const [activeZoneFilter, setActiveZoneFilter] = useState<string>('all')
+    const [activeZoneFilter, setActiveZoneFilter] = useState('all')
     const [isAddingItem, setIsAddingItem] = useState(false)
     const [isMovingItem, setIsMovingItem] = useState<Item | null>(null)
+    const [hydrated, setHydrated] = useState(false)
+
+    useEffect(() => { setHydrated(true) }, [])
 
     const location = useMemo(() => {
         return household?.locations?.find(l => l.id === id)
@@ -35,7 +38,7 @@ export default function LocationReference() {
 
     // --- Data Calculations ---
     const allItems = useMemo(() => {
-        if (!location) return []
+        if (!location || !hydrated) return []
         let items = (location.zones || []).flatMap(z => (z.items || []).map(i => ({ ...i, zoneName: z.name, zoneId: z.id })))
         if (activeZoneFilter !== 'all') {
             items = items.filter(i => i.zoneId === activeZoneFilter)

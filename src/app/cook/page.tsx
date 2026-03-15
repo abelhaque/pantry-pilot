@@ -1,5 +1,7 @@
 'use client'
 
+import React, { useState, useEffect } from 'react'
+
 import { 
   ChefHat, 
   Calendar, 
@@ -112,7 +114,7 @@ export default function CookHub() {
       {/* Meal Slots */}
       <section className="space-y-4 px-2">
         {slots.map((slot) => {
-          const plan = mealPlans.find(p => p.slot === slot)
+          const plan = (mealPlans || []).find((p: MealPlan) => p.slot === slot)
           return (
             <div 
               key={slot} 
