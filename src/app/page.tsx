@@ -91,9 +91,10 @@ const StorageCard = ({
     )
 }
 
-export default function Page() {
-    const router = useRouter()
+export default function Dashboard() {
     const { household, isLoading, createLocation, createZone } = useHousehold()
+    const router = useRouter()
+    const [hydrated, setHydrated] = useState(false)
     
     // --- UI State ---
     const [isAddingLocation, setIsAddingLocation] = useState(false)
@@ -102,14 +103,32 @@ export default function Page() {
     const [newLocName, setNewLocName] = useState('')
     const [newLocIcon, setNewLocIcon] = useState('📦')
     const [newZoneName, setNewZoneName] = useState('')
+    const [expiringSoonCount, setExpiringSoonCount] = useState(0)
 
-    if (isLoading) {
+    useEffect(() => { setHydrated(true) }, [])
+
+    useEffect(() => {
+        if (!household || !hydrated) return
+        const items = (household.locations || []).flatMap(l => (l.zones || []).flatMap(z => z.items || [])) || []
+        const count = items.filter(item => {
+            const expiry = item.expiry_date || item.expiry
+            if (!expiry) return false
+            const threeDaysFromNow = new Date()
+            threeDaysFromNow.setDate(new Date().getDate() + 3)
+            return new Date(expiry) <= threeDaysFromNow
+        }).length
+        setExpiringSoonCount(count)
+    }, [household, hydrated])
+
+    if (isLoading || !hydrated) {
         return (
-            <div className="min-h-screen bg-[#1A2119] flex items-center justify-center">
-                <div className="w-8 h-8 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+            <div className="flex items-center justify-center min-h-screen bg-[#F9F7F2]">
+                <div className="w-8 h-8 border-4 border-[#2C3A2B] border-t-transparent rounded-full animate-spin"></div>
             </div>
         )
     }
+
+    if (!household) return null
 
     // --- Data Calculations ---
     const allItems = household?.locations?.flatMap(l => (l.zones || []).flatMap(z => z.items || [])) || []

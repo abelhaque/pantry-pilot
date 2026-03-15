@@ -39,12 +39,13 @@ export default function LocationReference() {
     // --- Data Calculations ---
     const allItems = useMemo(() => {
         if (!location || !hydrated) return []
-        let items = (location.zones || []).flatMap(z => (z.items || []).map(i => ({ ...i, zoneName: z.name, zoneId: z.id })))
+        const zones = location.zones || []
+        let items = zones.flatMap(z => (z.items || []).map(i => ({ ...i, zoneName: z.name, zoneId: z.id })))
         if (activeZoneFilter !== 'all') {
             items = items.filter(i => i.zoneId === activeZoneFilter)
         }
         return items
-    }, [location, activeZoneFilter])
+    }, [location, activeZoneFilter, hydrated])
 
     // Aisle Grouping logic
     const aisleGroups = useMemo(() => {
@@ -71,17 +72,25 @@ export default function LocationReference() {
         }))
     }, [allItems])
 
-    if (!household) return (
-        <div className="min-h-screen bg-[#1A2119] flex items-center justify-center">
-            <div className="w-10 h-10 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
-        </div>
-    )
-    if (!location) return (
-        <div className="min-h-screen bg-[#1A2119] flex flex-col items-center justify-center p-10 text-center">
-            <h1 className="text-3xl font-black text-white mb-4 uppercase tracking-tighter">Location Not Found</h1>
-            <button onClick={() => router.push('/')} className="px-8 py-4 bg-emerald-500 text-[#1A2119] font-black rounded-3xl uppercase tracking-widest text-xs">Back to Dashboard</button>
-        </div>
-    )
+    if (!household || !hydrated) { // household being null implies loading
+        return (
+            <div className="min-h-screen bg-[#1A2119] flex items-center justify-center">
+                <div className="w-10 h-10 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+            </div>
+        )
+    }
+
+    if (!location) {
+        return (
+            <div className="min-h-screen bg-[#F9F7F2] flex items-center justify-center p-8 text-center">
+                <div>
+                   <AlertTriangle className="mx-auto text-amber-500 mb-4" size={48} />
+                   <h2 className="text-2xl font-black text-[#1A2119] mb-2 uppercase tracking-tighter">Location Not Found</h2>
+                   <button onClick={() => router.push('/')} className="text-emerald-500 font-black uppercase tracking-widest text-[10px]">Back to Dashboard</button>
+                </div>
+            </div>
+        )
+    }
 
     const handleAddItem = async (itemData: any) => {
         await fetch('/api/items', {
