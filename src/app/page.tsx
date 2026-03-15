@@ -16,7 +16,8 @@ import {
   Refrigerator,
   Snowflake,
   Archive,
-  MoreHorizontal
+  MoreHorizontal,
+  MapPin
 } from 'lucide-react'
 import { CATEGORIES } from '@/types'
 
@@ -136,18 +137,6 @@ export default function Dashboard() {
     
     const shoppingList = (household as any)?.shoppingList || []
     const toBuyCount = (shoppingList?.filter((i: any) => !i.isPurchased) || []).length
-
-    // Use static value for initial render to avoid hydration mismatch, or better: defer calculation
-    const [hydrated, setHydrated] = useState(false)
-    useEffect(() => { setHydrated(true) }, [])
-
-    const expiringSoonCount = hydrated ? allItems.filter(item => {
-        const expiry = item.expiry_date || item.expiry
-        if (!expiry) return false
-        const threeDaysFromNow = new Date()
-        threeDaysFromNow.setDate(new Date().getDate() + 3)
-        return new Date(expiry) <= threeDaysFromNow
-    }).length : 0
 
     const lowStockCount = allItems.filter(item => item.quantity <= (item.low_stock_threshold || 1)).length
 
