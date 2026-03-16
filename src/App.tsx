@@ -1009,6 +1009,7 @@ export default function App() {
           household_id: session.user.user_metadata?.household_id || null
         };
         setUser(appUser as User);
+        console.log('INITIAL AUTH SESSION:', appUser);
         
         if (appUser.household_id) {
           fetchHousehold(appUser.household_id);
@@ -1088,6 +1089,75 @@ export default function App() {
     }
   };
 
+  const seedDefaultLocations = async (targetHouseholdId: string) => {
+    try {
+      console.log('SEEDING EMERGENCY: Creating 5 default units for', targetHouseholdId);
+      
+      const defaultLocations = [
+        { name: 'Shopping Bags', icon: '🛍️', household_id: targetHouseholdId, id: uuidv4() },
+        { name: 'Fridge', icon: '❄️', household_id: targetHouseholdId, id: uuidv4() },
+        { name: 'Freezer', icon: '❄️', household_id: targetHouseholdId, id: uuidv4() },
+        { name: 'Cupboards', icon: '🥫', household_id: targetHouseholdId, id: uuidv4() },
+        { name: 'Other', icon: '📦', household_id: targetHouseholdId, id: uuidv4() }
+      ];
+
+      const { error: seedError } = await supabase
+        .from('locations')
+        .insert(defaultLocations);
+      
+      if (seedError) throw seedError;
+
+      const defaultZones = defaultLocations.map(loc => ({
+        id: uuidv4(),
+        name: 'Main',
+        location_id: loc.id
+      }));
+
+      const { error: zoneError } = await supabase
+        .from('zones')
+        .insert(defaultZones);
+      
+      if (zoneError) throw zoneError;
+      
+      console.log('SEEDING SUCCESS: 5 units and zones created.');
+      refresh();
+    } catch (err) {
+      console.error('SEEDING FAILURE:', err);
+    }
+  };
+
+  // Emergency Auto-Onboarding & Seeding
+  useEffect(() => {
+    let retryCount = 0;
+    const maxRetries = 10; // ~3 seconds
+    
+    const checkAndSeed = async () => {
+      if (user && !user.household_id && retryCount < maxRetries) {
+        retryCount++;
+        setTimeout(checkAndSeed, 300);
+        return;
+      }
+
+      const householdId = user?.household_id;
+      if (!householdId) return;
+
+      // Only seed if we've successfully connected/fetched but found nothing
+      if (isConnected && !isSyncing && state.locations.length === 0) {
+        await seedDefaultLocations(householdId);
+      }
+    };
+
+    checkAndSeed();
+  }, [user?.id, user?.household_id, state.locations.length, isConnected, isSyncing]);
+
+  // Special Priority for Abel: Ensure he always has a household
+  useEffect(() => {
+    if (user?.email === 'abelhaque@gmail.com' && !user.household_id && !isCreatingHouseholdRef.current) {
+        console.log('ABEL PRIORITY: Auto-provisioning household for owner account.');
+        handleCreateHousehold("Abel's Kitchen", user);
+    }
+  }, [user?.email, user?.household_id]);
+
   const handleAuth = async (email: string) => {
     if (!email) return;
     setIsLoggingIn(true);
@@ -1146,33 +1216,7 @@ export default function App() {
         throw hError;
       }
 
-      // 1.5 Seed default locations
-      const defaultLocations = [
-        { name: 'Shopping Bags', icon: '🛍️', household_id: newHouseholdId, id: uuidv4() },
-        { name: 'Fridge', icon: '❄️', household_id: newHouseholdId, id: uuidv4() },
-        { name: 'Freezer', icon: '❄️', household_id: newHouseholdId, id: uuidv4() },
-        { name: 'Cupboards', icon: '🥫', household_id: newHouseholdId, id: uuidv4() },
-        { name: 'Other', icon: '📦', household_id: newHouseholdId, id: uuidv4() }
-      ];
-
-      const { error: seedError } = await supabase
-        .from('locations')
-        .insert(defaultLocations);
-      
-      if (seedError) console.error('Failed to seed locations:', seedError);
-
-      // 1.6 Seed default zones for these locations
-      const defaultZones = defaultLocations.map(loc => ({
-        id: uuidv4(),
-        name: 'Main',
-        location_id: loc.id
-      }));
-
-      const { error: zoneError } = await supabase
-        .from('zones')
-        .insert(defaultZones);
-      
-      if (zoneError) console.error('Failed to seed zones:', zoneError);
+      await seedDefaultLocations(newHouseholdId);
 
       // 2. Update user metadata AND user table (if exists)
       const { error: metaError } = await supabase.auth.updateUser({
@@ -2017,15 +2061,63 @@ export default function App() {
                       )}
                     </>
                   ) : (
-                    <div className="py-12 border-2 border-dashed border-zinc-100 rounded-3xl flex flex-col items-center justify-center text-center">
-                      <div className="w-16 h-16 bg-zinc-50 rounded-full flex items-center justify-center mb-4 text-zinc-300">
-                        <Package size={32} />
+                    <div className="space-y-6">
+                      <div className="bg-amber-500/10 border border-amber-500/20 p-4 rounded-2xl flex items-center gap-3 mb-6">
+                        <AlertTriangle className="text-amber-500" size={20} />
+                        <div className="flex-1">
+                          <p className="text-xs font-bold text-amber-500">STATIC TEST MODE</p>
+                          <p className="text-[10px] text-amber-500/70">Database fetch resulted in 0 units. Showing hardcoded placeholders.</p>
+                        </div>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="text-amber-500 hover:bg-amber-500/10"
+                          onClick={() => refresh()}
+                        >
+                          Retry Sync
+                        </Button>
                       </div>
-                      <h4 className="font-bold text-zinc-900">No storage units yet</h4>
-                      <p className="text-sm text-zinc-400 max-w-[200px] mt-1">Add your first fridge, pantry or cupboard to start.</p>
-                      <Button variant="outline" className="mt-6" onClick={() => setIsAddingLocation(true)}>
-                        <Plus size={16} /> Create Unit
-                      </Button>
+
+                      {/* Hardcoded Hero: Shopping Bags */}
+                      <div className="w-full mb-6 opacity-60 grayscale-[0.5]">
+                        <Card className="bg-white/5 border-white/10 relative overflow-hidden !p-6 backdrop-blur-md w-full">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-4">
+                              <div className="w-14 h-14 rounded-2xl bg-sage/10 flex items-center justify-center text-3xl">🛍️</div>
+                              <div>
+                                <h4 className="font-bold text-xl text-white">Shopping Bags</h4>
+                                <p className="text-sm text-sage/60 font-medium">Placeholder Unit • Offline</p>
+                              </div>
+                            </div>
+                            <Plus size={24} className="text-white/20" />
+                          </div>
+                        </Card>
+                      </div>
+
+                      {/* Hardcoded 2x2 Grid */}
+                      <div className="grid grid-cols-2 gap-4 opacity-60 grayscale-[0.5]">
+                        {[
+                          { name: 'Fridge', icon: '❄️' },
+                          { name: 'Freezer', icon: '🧊' },
+                          { name: 'Cupboards', icon: '🥫' },
+                          { name: 'Other', icon: '📦' }
+                        ].map(loc => (
+                          <Card key={loc.name} className="border-white/10 bg-white/5 !p-4 backdrop-blur-sm h-40 flex flex-col justify-between">
+                            <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-xl">{loc.icon}</div>
+                            <div>
+                              <h4 className="font-bold text-base text-white">{loc.name}</h4>
+                              <p className="text-xs text-sage/60 font-medium">Offline</p>
+                            </div>
+                            <Plus size={18} className="absolute bottom-4 right-4 text-white/20" />
+                          </Card>
+                        ))}
+                      </div>
+
+                      <div className="text-center pt-6">
+                        <Button variant="outline" className="border-white/10 text-white/40 hover:text-white" onClick={() => setIsAddingLocation(true)}>
+                          <Plus size={16} /> Manually Add Real Unit
+                        </Button>
+                      </div>
                     </div>
                   )}
                 </div>

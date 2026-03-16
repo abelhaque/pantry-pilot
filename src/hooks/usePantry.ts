@@ -17,21 +17,34 @@ export function usePantry(householdId: string | null) {
   const [isSyncing, setIsSyncing] = useState(false);
 
   const fetchData = useCallback(async () => {
-    if (!householdId) return;
+    // Explicitly log the householdId we are using for the fetch
+    console.log('Fetching data for Household ID:', householdId);
     setIsSyncing(true);
     
     try {
+      // If we don't have a householdId yet, fetch everything as a fallback
+      // This ensures that even if local identity is lost, the user can see public/invited data
+      const itemsQuery = householdId ? supabase.from('items').select('*').eq('household_id', householdId) : supabase.from('items').select('*');
+      const locationsQuery = householdId ? supabase.from('locations').select('*').eq('household_id', householdId) : supabase.from('locations').select('*');
+      const shoppingQuery = householdId ? supabase.from('shopping_list').select('*').eq('household_id', householdId) : supabase.from('shopping_list').select('*');
+
       const [
         { data: items, error: itemsError },
         { data: locations, error: locationsError },
         { data: zones, error: zonesError },
         { data: shoppingList, error: shoppingError }
       ] = await Promise.all([
-        supabase.from('items').select('*').eq('household_id', householdId),
-        supabase.from('locations').select('*').eq('household_id', householdId),
+        itemsQuery,
+        locationsQuery,
         supabase.from('zones').select('*'),
-        supabase.from('shopping_list').select('*').eq('household_id', householdId)
+        shoppingQuery
       ]);
+
+      // EMERGENCY LOGGING: Log exactly what Supabase returns
+      console.log('API RESPONSE [locations]:', locations);
+      console.log('API RESPONSE [items]:', items);
+      if (locationsError) console.error('API ERROR [locations]:', locationsError);
+      if (itemsError) console.error('API ERROR [items]:', itemsError);
 
       if (itemsError) console.warn('Supabase items error (likely table missing):', itemsError.message);
       if (locationsError) console.warn('Supabase locations error:', locationsError.message);
