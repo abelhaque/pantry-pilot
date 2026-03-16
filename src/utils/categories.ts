@@ -1,3 +1,5 @@
+export type Category = 'Meat' | 'Fish' | 'Veg' | 'Fruit' | 'Dairy' | 'Bread' | 'Bakery' | 'Grains' | 'Tins' | 'Baking' | 'Sauces' | 'Drinks' | 'Other';
+
 export const CATEGORIES = [
     { name: 'Meat', icon: '🥩' },
     { name: 'Fish', icon: '🐟' },

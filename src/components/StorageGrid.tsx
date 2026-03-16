@@ -6,7 +6,11 @@ import { Plus, Pencil, ChevronRight, ShoppingCart } from 'lucide-react'
 // --- Haptic & Sound Utilities ---
 const playClick = () => {
     try {
-        const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)()
+        if (typeof window === 'undefined') return
+        const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext
+        if (!AudioContextClass) return
+
+        const audioCtx = new AudioContextClass()
         const osc = audioCtx.createOscillator()
         const gain = audioCtx.createGain()
         osc.type = 'square'
@@ -16,6 +20,7 @@ const playClick = () => {
         gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.05)
         osc.connect(gain); gain.connect(audioCtx.destination)
         osc.start(); osc.stop(audioCtx.currentTime + 0.05)
+        if (audioCtx.state === 'suspended') audioCtx.resume()
     } catch (e) {}
 }
 

@@ -13,7 +13,7 @@ import {
   X
 } from 'lucide-react'
 import { VoiceInput } from '@/components/VoiceInput'
-import { CATEGORIES } from '@/types'
+import { CATEGORIES } from '@/utils/categories'
 
 export default function PantryPage() {
     const router = useRouter()

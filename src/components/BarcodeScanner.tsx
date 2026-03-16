@@ -32,7 +32,11 @@ export function BarcodeScanner({ onScan, onClose }: BarcodeScannerProps) {
             }
             // Play click sound using Web Audio API
             try {
-              const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+              if (typeof window === 'undefined') return
+              const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+              if (!AudioContextClass) return
+
+              const audioCtx = new AudioContextClass();
               const oscillator = audioCtx.createOscillator();
               const gainNode = audioCtx.createGain();
               oscillator.connect(gainNode);
@@ -42,6 +46,7 @@ export function BarcodeScanner({ onScan, onClose }: BarcodeScannerProps) {
               gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
               oscillator.start();
               oscillator.stop(audioCtx.currentTime + 0.1); // 100ms beep
+              if (audioCtx.state === 'suspended') audioCtx.resume()
             } catch (e) {
               console.error("Audio play failed", e);
             }

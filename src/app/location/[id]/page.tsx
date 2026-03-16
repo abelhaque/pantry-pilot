@@ -16,9 +16,9 @@ import {
   AlertTriangle 
 } from 'lucide-react'
 import AddItem from '@/components/AddItem'
-import { getCategoryIcon, getExpiryStatus } from '@/utils/categories'
 import MoveItemModal from '@/components/MoveItemModal'
-import { CATEGORIES } from '@/utils/categories'
+import { getCategoryIcon, getExpiryStatus, CATEGORIES } from '@/utils/categories'
+import { Item } from '@/types'
 import { motion, AnimatePresence } from 'motion/react'
 
 export default function LocationReference() {
@@ -29,9 +29,6 @@ export default function LocationReference() {
     const [activeZoneFilter, setActiveZoneFilter] = useState('all')
     const [isAddingItem, setIsAddingItem] = useState(false)
     const [isMovingItem, setIsMovingItem] = useState<Item | null>(null)
-    const [hydrated, setHydrated] = useState(false)
-
-    useEffect(() => { setHydrated(true) }, [])
 
     const location = useMemo(() => {
         return household?.locations?.find(l => l.id === id)
@@ -73,7 +70,7 @@ export default function LocationReference() {
         }))
     }, [allItems])
 
-    if (!household || !hydrated) { // household being null implies loading
+    if (!household) { // household being null implies loading
         return (
             <div className="min-h-screen bg-[#1A2119] flex items-center justify-center">
                 <div className="w-10 h-10 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
