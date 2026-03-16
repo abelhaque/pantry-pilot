@@ -116,6 +116,6 @@ export function usePantry(householdId: string | null) {
     }
   }, [householdId, fetchData]);
 
-  return { state, isConnected, isSyncing, dispatch };
+  return { state, isConnected, isSyncing, refresh: fetchData, dispatch };
 }
 

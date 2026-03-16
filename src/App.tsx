@@ -877,7 +877,7 @@ export default function App() {
   const [formUnitType, setFormUnitType] = useState('items');
   const [formZoneId, setFormZoneId] = useState('');
 
-  const { state, dispatch, isConnected, isSyncing } = usePantry(user?.household_id);
+  const { state, dispatch, isConnected, isSyncing, refresh } = usePantry(user?.household_id);
   const [showSyncToast, setShowSyncToast] = useState(false);
 
   // Hard Reset on Navigation: Clear search and filters instantly when switching views or units
@@ -1079,6 +1079,8 @@ export default function App() {
       
       if (data) {
         setHousehold(data);
+        // Force a pantry refresh once household is confirmed
+        refresh();
       }
     } catch (err: any) {
       console.error('Failed to fetch household:', err);
@@ -1158,6 +1160,19 @@ export default function App() {
         .insert(defaultLocations);
       
       if (seedError) console.error('Failed to seed locations:', seedError);
+
+      // 1.6 Seed default zones for these locations
+      const defaultZones = defaultLocations.map(loc => ({
+        id: uuidv4(),
+        name: 'Main',
+        location_id: loc.id
+      }));
+
+      const { error: zoneError } = await supabase
+        .from('zones')
+        .insert(defaultZones);
+      
+      if (zoneError) console.error('Failed to seed zones:', zoneError);
 
       // 2. Update user metadata AND user table (if exists)
       const { error: metaError } = await supabase.auth.updateUser({
@@ -1804,9 +1819,22 @@ export default function App() {
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <h3 className="text-sm font-bold uppercase tracking-widest text-accent">Storage Units</h3>
-                  <Button variant="ghost" className="text-xs" onClick={() => setIsAddingLocation(true)}>
-                    <Plus size={14} /> Add Unit
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Button 
+                      variant="ghost" 
+                      className={`text-xs flex items-center gap-1 ${isSyncing ? 'animate-spin' : ''}`}
+                      onClick={() => {
+                        refresh();
+                        playClick();
+                      }}
+                      title="Force Sync"
+                    >
+                      <ArrowRightLeft size={14} />
+                    </Button>
+                    <Button variant="ghost" className="text-xs" onClick={() => setIsAddingLocation(true)}>
+                      <Plus size={14} /> Add Unit
+                    </Button>
+                  </div>
                 </div>
                 <div className="space-y-4">
                   {state.locations && state.locations.length > 0 ? (
