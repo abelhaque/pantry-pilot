@@ -5,11 +5,24 @@
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-serif: "Playfair Display", ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
   
-  --colo:root {
-  --primary: #2C3A2B; /* Dark Forest Green */
-  --secondary: #8DAA81; /* Sage Green */
-  --accent: #D4AF37; /* Brass Accent */
-  --charcoal: #1A2119; /* Deep Forest Charcoal */
+  --color-charcoal: var(--charcoal);
+  --color-forest: var(--primary);
+  --color-sage: var(--secondary);
+  --color-sage-light: var(--sage-light);
+  --color-off-white: var(--off-white);
+  --color-accent: var(--accent);
+  --color-primary: var(--primary);
+  --color-secondary: var(--secondary);
+
+  --shadow-soft: 0 10px 30px rgba(0,0,0,0.05);
+  --radius-xl: 20px;
+}
+
+:root {
+  --primary: #2C3A2B;
+  --secondary: #8DAA81;
+  --accent: #D4AF37;
+  --charcoal: #1A2119;
   --off-white: #F8F9F8;
   --sage-light: #F0F4F0;
   
@@ -30,9 +43,6 @@
   
   --background: #1A2119;
   --foreground: #F8F9F8;
-}  
-  --shadow-soft: 0 10px 30px rgba(0,0,0,0.05);
-  --radius-xl: 20px;
 }
 
 @layer utilities {
