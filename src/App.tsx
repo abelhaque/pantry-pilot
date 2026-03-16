@@ -854,6 +854,7 @@ export default function App() {
   const [isStoreSortingEnabled, setIsStoreSortingEnabled] = useState(false);
   const [editingLocation, setEditingLocation] = useState<Location | null>(null);
   const [addedToCartId, setAddedToCartId] = useState<string | null>(null);
+  const isCreatingHouseholdRef = useRef(false);
 
   const [formLocationName, setFormLocationName] = useState('');
   const [formLocationIcon, setFormLocationIcon] = useState('🏠');
@@ -1010,9 +1011,9 @@ export default function App() {
         
         if (appUser.household_id) {
           fetchHousehold(appUser.household_id);
-        } else {
+        } else if (!isCreatingHouseholdRef.current) {
           // Bypass for Abel: Auto-provision if no household
-          handleCreateHousehold('My Kitchen', appUser as User);
+          handleCreateHousehold("Abel's Kitchen", appUser as User);
         }
       }
     };
@@ -1031,9 +1032,9 @@ export default function App() {
         
         if (appUser.household_id) {
           fetchHousehold(appUser.household_id);
-        } else {
+        } else if (!isCreatingHouseholdRef.current) {
           // Bypass for Abel: Auto-provision if no household
-          handleCreateHousehold('My Kitchen', appUser as User);
+          handleCreateHousehold("Abel's Kitchen", appUser as User);
         }
       }
     });
@@ -1118,8 +1119,9 @@ export default function App() {
 
   const handleCreateHousehold = async (name: string, overrideUser?: User) => {
     const activeUser = overrideUser || user;
-    if (!activeUser) return;
+    if (!activeUser || isCreatingHouseholdRef.current) return;
     
+    isCreatingHouseholdRef.current = true;
     setIsProcessingHousehold(true);
     setHouseholdError(null);
     try {
@@ -1135,6 +1137,7 @@ export default function App() {
       
       if (hError) {
         if (hError.message?.includes('404')) {
+          console.error('Supabase Error: The "households" table does not exist.');
           throw new Error('Supabase Error: The "households" table does not exist. Please create it in your dashboard.');
         }
         throw hError;
@@ -1156,6 +1159,7 @@ export default function App() {
       setHouseholdError(err.message || 'Failed to create household');
     } finally {
       setIsProcessingHousehold(false);
+      isCreatingHouseholdRef.current = false;
     }
   };
 
