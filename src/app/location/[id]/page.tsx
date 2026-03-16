@@ -13,12 +13,12 @@ import {
   Move, 
   Trash2, 
   Search,
-  AlertTriangle
+  AlertTriangle 
 } from 'lucide-react'
 import AddItem from '@/components/AddItem'
 import { getCategoryIcon, getExpiryStatus } from '@/utils/categories'
 import MoveItemModal from '@/components/MoveItemModal'
-import { Item, CATEGORIES } from '@/types'
+import { CATEGORIES } from '@/utils/categories'
 import { motion, AnimatePresence } from 'motion/react'
 
 export default function LocationReference() {
@@ -59,7 +59,7 @@ export default function LocationReference() {
 
         // Sort aisles based on CATEGORIES order
         return Object.keys(groups).sort((a, b) => {
-            const order = CATEGORIES.map(c => c.name)
+            const order = (CATEGORIES || []).map((c: any) => c.name)
             const indexA = order.indexOf(a as any)
             const indexB = order.indexOf(b as any)
             if (indexA === -1 && indexB === -1) return a.localeCompare(b)
@@ -69,7 +69,7 @@ export default function LocationReference() {
         }).map(name => ({
             name,
             items: groups[name],
-            icon: CATEGORIES.find(c => c.name === name)?.icon || '📦'
+            icon: (CATEGORIES as any[]).find(c => c.name === name)?.icon || '📦'
         }))
     }, [allItems])
 
@@ -147,8 +147,8 @@ export default function LocationReference() {
                             <h1 className="text-6xl font-black tracking-tighter uppercase leading-none">{location.name}</h1>
                         </div>
                         <div className="w-24 h-24 rounded-[36px] bg-white/5 border border-white/10 flex items-center justify-center text-5xl shadow-2xl backdrop-blur-md">
-                            {(location.name || '').toLowerCase().includes('fridge') ? <Refrigerator size={44} /> : 
-                             (location.name || '').toLowerCase().includes('freezer') ? <Snowflake size={44} /> : 
+                            {((location.name || '').toLowerCase()).includes('fridge') ? <Refrigerator size={44} /> : 
+                             ((location.name || '').toLowerCase()).includes('freezer') ? <Snowflake size={44} /> : 
                              <Archive size={44} />}
                         </div>
                     </div>

@@ -31,7 +31,8 @@ export async function updateSession(request: NextRequest) {
         data: { user },
     } = await supabase.auth.getUser()
 
-    // Protected paths logic
+    // Protected paths logic - DEACTIVATED FOR PANTRY PILOT CLEAN
+    /*
     const isAuthPath = request.nextUrl.pathname.startsWith('/login') || 
                        request.nextUrl.pathname.startsWith('/auth') || 
                        request.nextUrl.pathname.startsWith('/api/auth')
@@ -41,6 +42,7 @@ export async function updateSession(request: NextRequest) {
         url.pathname = '/login'
         return NextResponse.redirect(url)
     }
+    */
 
     return supabaseResponse
 }

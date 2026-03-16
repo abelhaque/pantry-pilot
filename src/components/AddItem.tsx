@@ -45,13 +45,23 @@ export default function AddItem({ onAdd, onCancel, zones, initialValues }: AddIt
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
+        
+        let parsedExpiry = null
+        if (expiry) {
+            // Robust parsing for YYYY-MM-DD
+            const [y, m, d] = expiry.split('-').map(Number)
+            if (!isNaN(y) && !isNaN(m) && !isNaN(d)) {
+                parsedExpiry = new Date(y, m - 1, d)
+            }
+        }
+
         await onAdd({
             name,
             quantity: Number(quantity),
             unit,
             category,
             zoneId,
-            expiry: expiry ? new Date(expiry) : null
+            expiry: parsedExpiry
         })
     }
 

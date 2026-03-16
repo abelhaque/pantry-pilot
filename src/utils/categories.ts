@@ -1,18 +1,17 @@
 export const CATEGORIES = [
-    { name: 'Meat', icon: 'Beef' },
-    { name: 'Fish', icon: 'Fish' },
-    { name: 'Veg', icon: 'LeafyGreen' },
-    { name: 'Fruit', icon: 'Apple' },
-    { name: 'Dairy', icon: 'Milk' },
-    { name: 'Bread', icon: 'Bread' },
-    { name: 'Dessert', icon: 'CakeSlice' },
-    { name: 'Ready Meal', icon: 'CookingPot' },
-    { name: 'Grains', icon: 'Wheat' },
-    { name: 'Tins', icon: 'Soup' },
-    { name: 'Baking', icon: 'Utensils' },
-    { name: 'Sauces', icon: 'Droplet' },
-    { name: 'Drinks', icon: 'GlassWater' },
-    { name: 'Other', icon: 'Package' },
+    { name: 'Meat', icon: '🥩' },
+    { name: 'Fish', icon: '🐟' },
+    { name: 'Veg', icon: '🥦' },
+    { name: 'Fruit', icon: '🍎' },
+    { name: 'Dairy', icon: '🧀' },
+    { name: 'Bread', icon: '🍞' },
+    { name: 'Bakery', icon: '🥐' },
+    { name: 'Grains', icon: '🍝' },
+    { name: 'Tins', icon: '🥫' },
+    { name: 'Baking', icon: '🥣' },
+    { name: 'Sauces', icon: '🍯' },
+    { name: 'Drinks', icon: '🥤' },
+    { name: 'Other', icon: '📦' },
 ]
 
 export function getCategoryIcon(catName: string): string {
@@ -22,10 +21,19 @@ export function getCategoryIcon(catName: string): string {
 
 export function getExpiryStatus(expiryDate: string | null | Date): 'safe' | 'warning' | 'expired' | 'none' {
     if (!expiryDate) return 'none'
-    const now = new Date()
-    const exp = new Date(expiryDate)
+    
+    let exp: Date
+    if (typeof expiryDate === 'string') {
+        const [y, m, d] = expiryDate.split('-').map(Number)
+        if (isNaN(y) || isNaN(m) || isNaN(d)) return 'none'
+        exp = new Date(y, m - 1, d)
+    } else {
+        exp = new Date(expiryDate)
+    }
 
-    // Set to midnight for comparison
+    if (isNaN(exp.getTime())) return 'none'
+
+    const now = new Date()
     now.setHours(0, 0, 0, 0)
     exp.setHours(0, 0, 0, 0)
 

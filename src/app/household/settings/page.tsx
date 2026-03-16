@@ -24,7 +24,7 @@ export default function SettingsPage() {
 
             const data = await res.json()
             if (res.ok && data.token) {
-                const inviteText = `Hey! Join our pantry on Pantry Pilot. Click here to join: https://pantry-pilot-clean.onrender.com/join?code=${data.token}`
+                const inviteText = `Hey! Join our pantry on Pantry Pilot. Click here to join: ${window.location.origin}/join?code=${data.token}`
                 
                 if (navigator.share) {
                     try {

@@ -17,9 +17,11 @@ import {
   Snowflake,
   Archive,
   MoreHorizontal,
-  MapPin
+  MapPin,
+  ShoppingBag,
+  ArrowRight
 } from 'lucide-react'
-import { CATEGORIES } from '@/types'
+import { CATEGORIES } from '@/utils/categories'
 
 // --- Core Units Configuration ---
 const CORE_UNITS_CONFIG = [

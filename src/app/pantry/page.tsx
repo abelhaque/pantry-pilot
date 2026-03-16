@@ -39,13 +39,13 @@ export default function PantryPage() {
     }, [household])
 
     const filteredItems = useMemo(() => {
-        const query = searchQuery.toLowerCase().trim()
-        if (!query) return allItems
+        const query = (searchQuery || '').toLowerCase().trim()
+        if (!query) return allItems || []
 
-        return (allItems || []).filter(item => { // Harden allItems loop
-            const nameMatch = (item.name || '').toLowerCase().includes(query) // Harden item.name
-            const catMatch = (item.storageCategory || '').toLowerCase().includes(query) // Harden item.storageCategory
-            const aisleMatch = (item.shoppingCategory || '').toLowerCase().includes(query) // Harden item.shoppingCategory
+        return (allItems || []).filter(item => {
+            const nameMatch = (item.name || '').toLowerCase().includes(query)
+            const catMatch = (item.storageCategory || '').toLowerCase().includes(query)
+            const aisleMatch = (item.shoppingCategory || '').toLowerCase().includes(query)
             return nameMatch || catMatch || aisleMatch
         })
     }, [allItems, searchQuery])

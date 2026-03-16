@@ -6,7 +6,11 @@ import { Mic, X } from 'lucide-react'
 // --- Haptic & Sound Utilities (Ported from Fallback) ---
 const playClick = () => {
   try {
-    const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)()
+    if (typeof window === 'undefined') return
+    const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext
+    if (!AudioContextClass) return
+
+    const audioCtx = new AudioContextClass()
     const oscillator = audioCtx.createOscillator()
     const gainNode = audioCtx.createGain()
     oscillator.type = 'square'
@@ -16,12 +20,17 @@ const playClick = () => {
     gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.05)
     oscillator.connect(gainNode); gainNode.connect(audioCtx.destination)
     oscillator.start(); oscillator.stop(audioCtx.currentTime + 0.05)
+    if (audioCtx.state === 'suspended') audioCtx.resume()
   } catch (e) {}
 }
 
 const playDoubleDing = () => {
   try {
-    const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)()
+    if (typeof window === 'undefined') return
+    const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext
+    if (!AudioContextClass) return
+
+    const audioCtx = new AudioContextClass()
     const playDing = (time: number, freq: number) => {
       const oscillator = audioCtx.createOscillator()
       const gainNode = audioCtx.createGain()
@@ -36,6 +45,7 @@ const playDoubleDing = () => {
     }
     playDing(audioCtx.currentTime, 1200)
     playDing(audioCtx.currentTime + 0.1, 1500)
+    if (audioCtx.state === 'suspended') audioCtx.resume()
   } catch (e) {}
 }
 
@@ -140,7 +150,7 @@ export const VoiceInput = ({
         type="text"
         name={name}
         disabled={disabled}
-        value={internalValue}
+        value={internalValue || ''}
         onChange={(e) => {
           setInternalValue(e.target.value)
           if (onChange) onChange(e)

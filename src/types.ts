@@ -90,37 +90,7 @@ export interface PantryState {
   mealPlans: MealPlan[];
 }
 
-export type Category = 
-  | 'Meat' | 'Fish' | 'Veg' | 'Fruit' | 'Dairy' | 'Bakery' 
-  | 'Pasta & Grains' | 'Tins & Jars' | 'Baking & Flour' 
-  | 'Spices & Seasoning' | 'Sauces & Oils' | 'Snacks' 
-  | 'Desserts' | 'Ready Meals' | 'Drinks' | 'Coffee & Tea' 
-  | 'Frozen' | 'Cleaning' | 'Personal Care' | 'Household' | 'Pet Care' | 'Other';
-
-export const CATEGORIES: { name: Category; icon: string }[] = [
-  { name: 'Meat', icon: '🥩' },
-  { name: 'Fish', icon: '🐟' },
-  { name: 'Veg', icon: '🥦' },
-  { name: 'Fruit', icon: '🍎' },
-  { name: 'Dairy', icon: '🧀' },
-  { name: 'Bakery', icon: '🍞' },
-  { name: 'Pasta & Grains', icon: '🍝' },
-  { name: 'Tins & Jars', icon: '🥫' },
-  { name: 'Baking & Flour', icon: '🥣' },
-  { name: 'Spices & Seasoning', icon: '🧂' },
-  { name: 'Sauces & Oils', icon: '🍯' },
-  { name: 'Snacks', icon: '🥨' },
-  { name: 'Desserts', icon: '🍰' },
-  { name: 'Ready Meals', icon: '🍱' },
-  { name: 'Drinks', icon: '🥤' },
-  { name: 'Coffee & Tea', icon: '☕' },
-  { name: 'Frozen', icon: '❄️' },
-  { name: 'Cleaning', icon: '🧼' },
-  { name: 'Personal Care', icon: '🧖' },
-  { name: 'Household', icon: '🔋' },
-  { name: 'Pet Care', icon: '🐾' },
-  { name: 'Other', icon: '📦' },
-];
+// Redundant CATEGORIES removed - see @/utils/categories
 
 export const OFFICIAL_ICONS = [
   { icon: '🌬️', label: 'Fridge', keywords: ['fridge', 'refrigerator', 'chiller'] },
