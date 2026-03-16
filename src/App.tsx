@@ -233,11 +233,11 @@ const withFeedback = (fn: any, type: 'click' | 'delete' | 'success' = 'click') =
 
 const Button = ({ children, onClick, variant = 'primary', className = '', disabled = false, type = 'button' }: any) => {
   const variants: any = {
-    primary: 'bg-primary text-white hover:opacity-90',
-    secondary: 'bg-secondary text-white hover:opacity-90',
-    danger: 'bg-red-50 text-red-600 hover:bg-red-100',
-    outline: 'border border-zinc-200 text-charcoal hover:bg-zinc-50',
-    ghost: 'text-zinc-500 hover:bg-zinc-100'
+    primary: 'bg-sage text-forest hover:opacity-90 shadow-lg font-bold',
+    secondary: 'bg-white/10 text-white hover:bg-white/20 border border-white/10',
+    danger: 'bg-red-500/10 text-red-500 hover:bg-red-500/20 border border-red-500/20',
+    outline: 'border border-white/20 text-white hover:bg-white/10',
+    ghost: 'text-white/40 hover:text-white hover:bg-white/5'
   };
 
   const handleClick = (e: any) => {
@@ -275,7 +275,7 @@ const Card = ({ children, onClick, className = '' }: any) => {
   return (
     <div 
       onClick={handleClick}
-      className={`rounded-[20px] p-4 tactile-card ${onClick ? 'cursor-pointer' : ''} ${className}`}
+      className={`rounded-[20px] p-4 bg-white/5 border border-white/10 backdrop-blur-md ${onClick ? 'cursor-pointer hover:border-sage/50 transition-all' : ''} ${className}`}
     >
       {children}
     </div>
@@ -284,10 +284,10 @@ const Card = ({ children, onClick, className = '' }: any) => {
 
 const Badge = ({ children, color = 'zinc' }: any) => {
   const colors: any = {
-    red: 'bg-red-50 text-red-600 border-red-100',
-    amber: 'bg-amber-50 text-amber-600 border-amber-100',
-    green: 'bg-emerald-50 text-emerald-600 border-emerald-100',
-    zinc: 'bg-zinc-50 text-zinc-600 border-zinc-100'
+    red: 'bg-red-500/10 text-red-400 border-red-500/20',
+    amber: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
+    green: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
+    zinc: 'bg-white/5 text-white/40 border-white/10'
   };
   return (
     <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border ${colors[color]}`}>
@@ -297,11 +297,11 @@ const Badge = ({ children, color = 'zinc' }: any) => {
 };
 
 const GroupHeader = ({ title, icon, className = '' }: any) => (
-  <div className={`tactile-card rounded-2xl px-5 py-3 flex items-center gap-3 mb-6 sticky top-20 z-10 ${className}`}>
-    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-xl">
+  <div className={`bg-white/5 border border-white/10 backdrop-blur-xl rounded-2xl px-5 py-3 flex items-center gap-3 mb-6 sticky top-20 z-10 ${className}`}>
+    <div className="w-10 h-10 rounded-xl bg-sage/10 flex items-center justify-center text-xl text-sage">
       {icon}
     </div>
-    <h3 className="font-bold text-charcoal uppercase text-xs tracking-widest">{title}</h3>
+    <h3 className="font-bold text-white/60 uppercase text-xs tracking-widest">{title}</h3>
   </div>
 );
 
@@ -311,8 +311,8 @@ const SwipeableItem = ({
   onSwipeRight, 
   leftIcon, 
   rightIcon,
-  leftColor = "bg-[#8DAA81]", // Sage Green
-  rightColor = "bg-red-400", // Soft Red
+  leftColor = "bg-sage", // Sage Green
+  rightColor = "bg-red-500", // Red
   leftFeedbackType = 'success',
   rightFeedbackType = 'delete'
 }: any) => {
@@ -455,7 +455,7 @@ const VoiceInput = ({ value, defaultValue, onChange, placeholder, className, req
         onFocus={onFocus}
         onClick={onClick}
         placeholder={placeholder}
-        className={`w-full py-3 rounded-[20px] focus:outline-none focus:ring-2 focus:ring-[#8DAA81]/20 transition-all ${clearable && displayValue ? 'pr-20' : 'pr-12'} ${iconLeft ? 'pl-12' : 'px-4'} ${className}`}
+        className={`w-full py-3 rounded-[20px] bg-white/5 border border-white/10 text-white placeholder:text-white/20 focus:outline-none focus:ring-2 focus:ring-sage/20 transition-all ${clearable && displayValue ? 'pr-20' : 'pr-12'} ${iconLeft ? 'pl-12' : 'px-4'} ${className}`}
       />
       <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
         {clearable && displayValue && (
@@ -510,7 +510,7 @@ const Combobox = ({ options, value, onChange, placeholder, className = '', name 
     <div ref={wrapperRef} className="relative w-full">
       <input type="hidden" name={name} value={value} />
       <div 
-        className={`w-full px-4 py-3 bg-white rounded-[20px] border border-primary/30 focus-within:ring-2 focus-within:ring-primary/20 flex items-center justify-between cursor-text ${className}`}
+        className={`w-full px-4 py-3 bg-white/5 rounded-[20px] border border-white/10 focus-within:ring-2 focus-within:ring-sage/20 flex items-center justify-between cursor-text ${className}`}
         onClick={() => setIsOpen(true)}
       >
         {isOpen ? (
@@ -621,7 +621,6 @@ export default function App() {
     const saved = localStorage.getItem('pantry_pilot_user');
     return saved ? JSON.parse(saved) : null;
   });
-  const [passwordInput, setPasswordInput] = useState('');
   const [household, setHousehold] = useState<Household | null>(null);
   const [isHouseholdSettingsOpen, setIsHouseholdSettingsOpen] = useState(false);
   const [onboardingStep, setOnboardingStep] = useState<'choice' | 'create' | 'join'>('choice');
@@ -1029,8 +1028,9 @@ export default function App() {
           fetchHousehold(appUser.household_id);
         }
       } else {
-        setUser(null);
-        localStorage.removeItem('pantry_pilot_user');
+        // Only clear if explicitly logged out or session expired
+        // But the user wants persistent identity, so we might want to keep the local state
+        // for "Guest-like" behavior if possible, but standard auth requires session.
       }
     });
 
@@ -1071,29 +1071,24 @@ export default function App() {
   };
 
   const handleAuth = async (email: string) => {
-    if (!email || !passwordInput) return;
+    if (!email) return;
     setIsLoggingIn(true);
     setAuthError(null);
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
+      const { error } = await supabase.auth.signInWithOtp({
         email: email.toLowerCase(),
-        password: passwordInput,
+        options: {
+          emailRedirectTo: window.location.origin
+        }
       });
       
       if (error) throw error;
       
-      console.log('Auth success:', data.user);
-      // Household ID might be in metadata or we might need to fetch a mapping later
-      const appUser = {
-        id: data.user.id,
-        email: data.user.email || '',
-        household_id: data.user.user_metadata?.household_id || null
-      };
-      setUser(appUser as User);
+      setAuthError('Check your email for the magic link!');
     } catch (err: any) {
       console.error('Auth error:', err);
-      setAuthError(err.message || 'Invalid login credentials');
+      setAuthError(err.message || 'Failed to send magic link');
     } finally {
       setIsLoggingIn(false);
     }
@@ -1330,77 +1325,113 @@ export default function App() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-sage-light flex items-center justify-center p-6">
-        <Card className="w-full max-w-md p-8">
-          <div className="text-center mb-8">
+      <div className="min-h-screen bg-forest flex items-center justify-center p-6">
+        <div className="w-full max-w-md space-y-8">
+          <div className="text-center">
             <motion.div 
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.5, ease: "easeOut" }}
-              className="w-32 h-32 mx-auto mb-6 rounded-full overflow-hidden border-2 border-white shadow-[0_10px_30px_rgba(0,0,0,0.15)] bg-white"
+              className="w-32 h-32 mx-auto mb-6 rounded-full overflow-hidden border-2 border-white/20 shadow-2xl bg-white/10 backdrop-blur-xl"
             >
               <img src="/icon.png" alt="Pantry Pilot Logo" className="w-full h-full object-cover" onError={(e) => { e.currentTarget.src = 'https://images.unsplash.com/photo-1556910103-1c02745aae4d?q=80&w=512&auto=format&fit=crop'; }} />
             </motion.div>
-            <h1 className="text-3xl font-bold tracking-tight text-charcoal">Pantry Pilot</h1>
-            <p className="text-zinc-500 mt-2">Intelligent inventory for the modern home</p>
+            <h1 className="text-4xl font-bold tracking-tight text-white mb-2">Pantry Pilot</h1>
+            <p className="text-sage mt-2 text-lg">Intelligent inventory for the modern home</p>
           </div>
-            {authError && (
-              <div className="p-3 bg-red-50 text-red-600 text-sm rounded-xl border border-red-100 mb-4 flex items-center gap-2">
-                <AlertTriangle size={16} />
-                {authError}
+
+          <div className="grid gap-4 pt-4">
+            <Button 
+              size="lg"
+              className="h-24 bg-white/10 hover:bg-white/20 border border-white/20 text-white rounded-3xl flex flex-col items-center justify-center gap-2 group transition-all backdrop-blur-md"
+              onClick={() => setOnboardingStep('join')}
+            >
+              <Users size={28} className="text-sage group-hover:scale-110 transition-transform" />
+              <div className="flex flex-col items-center">
+                <span className="text-lg font-bold">Join Household</span>
+                <span className="text-[10px] uppercase tracking-widest text-sage/60 font-medium">Use an invite code</span>
               </div>
-            )}
-            <form onSubmit={(e: any) => {
-              e.preventDefault();
-              handleAuth(emailInput);
-            }} className="space-y-4">
-              <div>
-                <label className="text-xs font-bold uppercase tracking-wider text-zinc-400 mb-1 block">Email Address</label>
-                <input 
-                  name="email"
-                  type="email" 
-                  required
-                  value={emailInput}
-                  onChange={(e) => setEmailInput(e.target.value)}
-                  placeholder="you@example.com"
-                  className="w-full px-4 py-3 rounded-xl border border-zinc-100 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all mb-4"
-                />
-                <label className="text-xs font-bold uppercase tracking-wider text-zinc-400 mb-1 block">Password</label>
-                <input 
-                  type="password" 
-                  required
-                  value={passwordInput}
-                  onChange={(e) => setPasswordInput(e.target.value)}
-                  placeholder="••••••••"
-                  className="w-full px-4 py-3 rounded-xl border border-zinc-100 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
-                />
+            </Button>
+
+            <Button 
+              size="lg"
+              variant="secondary"
+              className="h-24 rounded-3xl flex flex-col items-center justify-center gap-2 group transition-all"
+              onClick={() => setOnboardingStep('create')}
+            >
+              <PlusCircle size={28} className="group-hover:scale-110 transition-transform" />
+              <div className="flex flex-col items-center">
+                <span className="text-lg font-bold">Start New</span>
+                <span className="text-[10px] uppercase tracking-widest opacity-60 font-medium">Create your home sync</span>
               </div>
-              <div className="space-y-2">
-                <Button type="submit" disabled={isLoggingIn} className="w-full">
-                  {isLoggingIn ? 'Signing in...' : 'Get Started'}
-                </Button>
-                {isLoggingIn && (
-                  <button 
-                    type="button"
-                    onClick={() => setIsLoggingIn(false)}
-                    className="w-full text-xs text-zinc-400 hover:text-zinc-600 transition-all py-2"
-                  >
-                    Cancel & Try Again
+            </Button>
+          </div>
+
+          <AnimatePresence>
+            {(onboardingStep === 'create' || onboardingStep === 'join') && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 20 }}
+                className="bg-white/10 backdrop-blur-xl p-8 rounded-[40px] border border-white/10 shadow-2xl space-y-6"
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <h2 className="text-xl font-bold text-white">
+                    {onboardingStep === 'create' ? 'Create Your Home' : 'Join a Household'}
+                  </h2>
+                  <button onClick={() => setOnboardingStep('choice')} className="text-white/40 hover:text-white transition-all">
+                    <X size={20} />
                   </button>
+                </div>
+
+                {authError && (
+                  <div className="p-4 bg-red-500/20 text-red-100 text-sm rounded-2xl border border-red-500/20 mb-4 flex items-center gap-3">
+                    <AlertTriangle size={18} />
+                    {authError}
+                  </div>
                 )}
-              </div>
-            </form>
-        </Card>
+
+                <form onSubmit={(e: any) => {
+                  e.preventDefault();
+                  handleAuth(emailInput);
+                }} className="space-y-4">
+                  <div>
+                    <label className="text-xs font-bold uppercase tracking-wider text-sage/60 mb-2 block">Your Email</label>
+                    <input 
+                      name="email"
+                      type="email" 
+                      required
+                      value={emailInput}
+                      onChange={(e) => setEmailInput(e.target.value)}
+                      placeholder="you@example.com"
+                      className="w-full px-6 py-4 rounded-2xl bg-white/5 border border-white/10 text-white placeholder:text-white/20 focus:outline-none focus:ring-2 focus:ring-sage/20 transition-all font-medium"
+                    />
+                  </div>
+                  <Button type="submit" disabled={isLoggingIn} className="w-full h-14 rounded-2xl bg-sage hover:bg-sage/90 text-forest font-bold text-lg">
+                    {isLoggingIn ? 'Identifying...' : 'Continue'}
+                  </Button>
+                  <p className="text-[10px] text-center text-white/40 uppercase tracking-widest font-bold">
+                    We'll send a magic link to your email
+                  </p>
+                </form>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          <p className="text-center text-white/20 text-xs font-medium pt-8">
+            Pantry Pilot v2.0 • Zero Credentials Auth
+          </p>
+        </div>
       </div>
     );
   }
 
   if (!user.household_id) {
     return (
-      <div className="min-h-screen bg-sage-light flex items-center justify-center p-6">
-        <Card className="w-full max-w-md p-8">
+      <div className="min-h-screen bg-forest flex items-center justify-center p-6 text-white">
+        <Card className="w-full max-w-md p-8 bg-white/5 border border-white/10 backdrop-blur-xl">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold text-charcoal">Setup Your Household</h2>
+            <h2 className="text-xl font-bold text-white">Setup Your Household</h2>
             <button 
               onClick={() => {
                 supabase.auth.signOut();
@@ -1415,7 +1446,7 @@ export default function App() {
           </div>
           
           {householdError && (
-            <div className="p-3 bg-red-50 text-red-600 text-sm rounded-xl border border-red-100 mb-6 flex items-center gap-2">
+            <div className="p-3 bg-red-500/10 text-red-400 text-sm rounded-xl border border-red-500/20 mb-6 flex items-center gap-2">
               <AlertTriangle size={16} />
               {householdError}
             </div>
@@ -1425,21 +1456,21 @@ export default function App() {
             <div className="grid grid-cols-2 gap-4">
               <button 
                 onClick={() => setOnboardingStep('create')}
-                className={`flex flex-col items-center gap-3 p-6 rounded-2xl border-2 transition-all ${onboardingStep === 'create' ? 'border-secondary bg-secondary/5' : 'border-zinc-100 hover:border-zinc-200 bg-white'}`}
+                className={`flex flex-col items-center gap-3 p-6 rounded-2xl border-2 transition-all ${onboardingStep === 'create' ? 'border-sage bg-sage/5' : 'border-white/10 hover:border-white/20 bg-white/5'}`}
               >
-                <div className="w-12 h-12 bg-secondary/10 rounded-xl flex items-center justify-center text-secondary">
+                <div className="w-12 h-12 bg-sage/10 rounded-xl flex items-center justify-center text-sage">
                   <PlusCircle size={24} />
                 </div>
-                <span className="text-sm font-bold">Create New</span>
+                <span className="text-sm font-bold text-white">Create New</span>
               </button>
               <button 
                 onClick={() => setOnboardingStep('join')}
-                className={`flex flex-col items-center gap-3 p-6 rounded-2xl border-2 transition-all ${onboardingStep === 'join' ? 'border-secondary bg-secondary/5' : 'border-zinc-100 hover:border-zinc-200 bg-white'}`}
+                className={`flex flex-col items-center gap-3 p-6 rounded-2xl border-2 transition-all ${onboardingStep === 'join' ? 'border-sage bg-sage/5' : 'border-white/10 hover:border-white/20 bg-white/5'}`}
               >
-                <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center text-primary">
+                <div className="w-12 h-12 bg-sage/10 rounded-xl flex items-center justify-center text-sage">
                   <Users size={24} />
                 </div>
-                <span className="text-sm font-bold">Join Existing</span>
+                <span className="text-sm font-bold text-white">Join Existing</span>
               </button>
             </div>
 
@@ -1457,15 +1488,15 @@ export default function App() {
                   className="space-y-4"
                 >
                   <div>
-                    <label className="text-xs font-bold uppercase tracking-wider text-zinc-400 mb-1 block">Household Name</label>
+                    <label className="text-xs font-bold uppercase tracking-wider text-sage/40 mb-1 block">Household Name</label>
                     <input 
                       name="name"
                       required
                       placeholder="e.g. The Smith Family"
-                      className="w-full px-4 py-3 rounded-xl border border-zinc-100 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                      className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-white/20 focus:outline-none focus:ring-2 focus:ring-sage/20 transition-all"
                     />
                   </div>
-                  <Button type="submit" disabled={isProcessingHousehold} className="w-full">
+                  <Button type="submit" disabled={isProcessingHousehold} className="w-full bg-sage text-forest hover:bg-sage/90 font-bold">
                     {isProcessingHousehold ? 'Creating...' : 'Create Household'}
                   </Button>
                 </motion.form>
@@ -1484,12 +1515,12 @@ export default function App() {
                   className="space-y-4"
                 >
                   <div>
-                    <label className="text-xs font-bold uppercase tracking-wider text-zinc-400 mb-1 block">Invite Code</label>
+                    <label className="text-xs font-bold uppercase tracking-wider text-sage/40 mb-1 block">Invite Code</label>
                     <input 
                       name="code"
                       required
                       placeholder="e.g. PX-4022"
-                      className="w-full px-4 py-3 rounded-xl border border-zinc-100 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all uppercase"
+                      className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-white/20 focus:outline-none focus:ring-2 focus:ring-sage/20 transition-all uppercase"
                     />
                   </div>
                   <Button type="submit" variant="secondary" disabled={isProcessingHousehold} className="w-full">
@@ -1505,42 +1536,42 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-sage-light text-charcoal pb-24">
+    <div className="min-h-screen bg-forest text-white pb-24">
       {/* Header */}
-      <header className="sticky top-0 z-30 bg-sage-light/80 backdrop-blur-md border-b border-primary/30 px-6 py-4 flex items-center justify-between">
+      <header className="sticky top-0 z-30 bg-forest/80 backdrop-blur-md border-b border-white/10 px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-full overflow-hidden shadow-sm border-2 border-white">
             <img src="/icon.png" alt="Pantry Pilot" className="w-full h-full object-cover" onError={(e) => { e.currentTarget.src = 'https://images.unsplash.com/photo-1556910103-1c02745aae4d?q=80&w=512&auto=format&fit=crop'; }} />
           </div>
           <div>
-            <h1 className="font-bold tracking-tight text-charcoal flex items-center gap-2">
+            <h1 className="font-bold tracking-tight text-white flex items-center gap-2">
               Pantry Pilot
               {!isConnected && <CloudOff size={14} className="text-red-400" />}
             </h1>
             <div className="flex items-center gap-2">
               <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-emerald-500' : 'bg-red-500'}`}></div>
-              <span className="text-[10px] text-zinc-400 uppercase font-bold tracking-widest">
+              <span className="text-[10px] text-white/40 uppercase font-bold tracking-widest">
                 {isConnected ? 'Live Sync' : 'Offline Mode'}
               </span>
-              <span className="text-[10px] text-zinc-300 uppercase font-bold tracking-widest ml-2 border-l border-zinc-200 pl-2">
+              <span className="text-[10px] text-white/20 uppercase font-bold tracking-widest ml-2 border-l border-white/10 pl-2">
                 {household?.name || 'My Home'}
               </span>
             </div>
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="ghost" className="w-10 h-10 p-0 rounded-full" onClick={() => setIsHouseholdSettingsOpen(true)}>
-            <Settings size={18} />
-          </Button>
-          <Button variant="ghost" className="w-10 h-10 p-0 rounded-full" onClick={() => {
-            supabase.auth.signOut();
-            setUser(null);
-            localStorage.removeItem('pantry_pilot_user');
-          }}>
-            <LogOut size={18} />
-          </Button>
-        </div>
-      </header>
+        <Button variant="ghost" className="w-10 h-10 p-0 rounded-full text-white/40 hover:text-white" onClick={() => setIsHouseholdSettingsOpen(true)}>
+          <Settings size={18} />
+        </Button>
+        <Button variant="ghost" className="w-10 h-10 p-0 rounded-full text-white/40 hover:text-red-400" onClick={() => {
+          supabase.auth.signOut();
+          setUser(null);
+          localStorage.removeItem('pantry_pilot_user');
+        }}>
+          <LogOut size={18} />
+        </Button>
+      </div>
+    </header>
 
       {/* Sync Toast */}
       <AnimatePresence>
@@ -1570,8 +1601,8 @@ export default function App() {
                   setSearchQuery(e.target.value);
                 }}
                 placeholder="Search pantry..."
-                className="bg-white/50 border-none"
-                iconLeft={<Search size={18} />}
+                className="bg-white/5 border border-white/10 text-white placeholder:text-white/20"
+                iconLeft={<Search size={18} className="text-white/40" />}
                 clearable={true}
                 onClear={() => setSearchQuery('')}
               />
@@ -1581,7 +1612,7 @@ export default function App() {
                 onClick={() => {
                   setSelectedCategory(null);
                 }}
-                className={`px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-all ${!selectedCategory ? 'bg-black text-white' : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'}`}
+                className={`px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-all ${!selectedCategory ? 'bg-sage text-forest' : 'bg-white/5 text-white/60 hover:bg-white/10 border border-white/5'}`}
               >
                 All
               </button>
@@ -1592,7 +1623,7 @@ export default function App() {
                     const newCat = cat.name === selectedCategory ? null : cat.name;
                     setSelectedCategory(newCat);
                   }}
-                  className={`px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap flex items-center gap-2 transition-all ${selectedCategory === cat.name ? 'bg-black text-white' : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'}`}
+                  className={`px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap flex items-center gap-2 transition-all ${selectedCategory === cat.name ? 'bg-sage text-forest' : 'bg-white/5 text-white/60 hover:bg-white/10 border border-white/5'}`}
                 >
                   <span>{cat.icon}</span>
                   <span>{cat.name}</span>
@@ -1638,49 +1669,48 @@ export default function App() {
                   onClick={() => {
                     setSelectedCategory(null);
                     setView('inventory');
-                    // We could add a specific filter for expiring soon if we had a state for it
                   }}
-                  className="px-4 py-2 rounded-full border border-white/40 bg-white/20 backdrop-blur-sm flex items-center gap-2 hover:bg-white/30 transition-all group tactile-button"
+                  className="px-4 py-2 rounded-full border border-white/10 bg-white/5 backdrop-blur-sm flex items-center gap-2 hover:bg-white/10 transition-all group tactile-button"
                 >
-                  <div className={`w-2 h-2 rounded-full ${expiringSoon.length > 0 ? 'bg-amber-500 animate-pulse' : 'bg-zinc-300'}`}></div>
-                  <span className="text-xs font-bold uppercase tracking-wider text-charcoal/70">Expiring Soon</span>
-                  <span className="text-xs font-bold bg-white/50 px-2 py-0.5 rounded-full">{expiringSoon.length}</span>
+                  <div className={`w-2 h-2 rounded-full ${expiringSoon.length > 0 ? 'bg-amber-500 animate-pulse' : 'bg-white/20'}`}></div>
+                  <span className="text-xs font-bold uppercase tracking-wider text-white/60">Expiring Soon</span>
+                  <span className="text-xs font-bold bg-white/10 px-2 py-0.5 rounded-full text-white/40">{expiringSoon.length}</span>
                 </button>
                 <button 
                   onClick={() => {
                     setSelectedCategory(null);
                     setView('inventory');
                   }}
-                  className="px-4 py-2 rounded-full border border-white/40 bg-white/20 backdrop-blur-sm flex items-center gap-2 hover:bg-white/30 transition-all group tactile-button"
+                  className="px-4 py-2 rounded-full border border-white/10 bg-white/5 backdrop-blur-sm flex items-center gap-2 hover:bg-white/10 transition-all group tactile-button"
                 >
-                  <div className={`w-2 h-2 rounded-full ${lowStock.length > 0 ? 'bg-red-500 animate-pulse' : 'bg-zinc-300'}`}></div>
-                  <span className="text-xs font-bold uppercase tracking-wider text-charcoal/70">Low Stock</span>
-                  <span className="text-xs font-bold bg-white/50 px-2 py-0.5 rounded-full">{lowStock.length}</span>
+                  <div className={`w-2 h-2 rounded-full ${lowStock.length > 0 ? 'bg-red-500 animate-pulse' : 'bg-white/20'}`}></div>
+                  <span className="text-xs font-bold uppercase tracking-wider text-white/60">Low Stock</span>
+                  <span className="text-xs font-bold bg-white/10 px-2 py-0.5 rounded-full text-white/40">{lowStock.length}</span>
                 </button>
               </div>
 
               {/* Alerts */}
               {(expiringSoon.length > 0 || lowStock.length > 0) && (
                 <div className="space-y-4">
-                  <h3 className="text-sm font-bold uppercase tracking-widest text-accent">Attention Required</h3>
+                  <h3 className="text-sm font-bold uppercase tracking-widest text-sage/60">Attention Required</h3>
                   <div className="grid md:grid-cols-2 gap-4">
                     {[...expiringSoon.slice(0, 2), ...lowStock.slice(0, 2)].slice(0, 4).map(item => {
                       const isLowStock = item.quantity <= item.low_stock_threshold;
                       const isExpiring = item.expiry_date && new Date(item.expiry_date) <= new Date(Date.now() + 3 * 24 * 60 * 60 * 1000);
                       
                       return (
-                        <div key={item.id} className={`flex items-center gap-4 p-4 border rounded-2xl ${isLowStock ? 'bg-red-50 border-red-100' : 'bg-amber-50 border-amber-100'}`}>
+                        <div key={item.id} className={`flex items-center gap-4 p-4 border rounded-2xl backdrop-blur-md ${isLowStock ? 'bg-red-500/10 border-red-500/20' : 'bg-amber-500/10 border-amber-500/20'}`}>
                           <div className="text-2xl">{item.icon}</div>
                           <div className="flex-1 overflow-hidden">
-                            <h4 className="font-bold text-sm truncate">{item.name}</h4>
+                            <h4 className="font-bold text-sm truncate text-white">{item.name}</h4>
                             <div className="flex items-center gap-2">
-                              {isExpiring && <p className="text-[10px] text-amber-600 font-bold">Expires: {item.expiry_date}</p>}
-                              {isLowStock && <p className="text-[10px] text-red-600 font-bold">Low Stock: {item.quantity} {item.unit_type}</p>}
+                              {isExpiring && <p className="text-[10px] text-amber-500/80 font-bold">Expires: {item.expiry_date}</p>}
+                              {isLowStock && <p className="text-[10px] text-red-500/80 font-bold">Low Stock: {item.quantity} {item.unit_type}</p>}
                               {(() => {
                                 const zone = state.zones.find(z => z.id === item.zone_id);
                                 const location = state.locations.find(l => l.id === zone?.location_id);
                                 return (
-                                  <p className="text-[10px] text-zinc-400 truncate">
+                                  <p className="text-[10px] text-white/30 truncate">
                                     in {location?.name}
                                   </p>
                                 );
@@ -1688,7 +1718,7 @@ export default function App() {
                             </div>
                           </div>
                           <div className="flex flex-col items-center gap-2">
-                            {isLowStock ? <AlertTriangle className="text-red-500" size={18} /> : <AlertTriangle className="text-amber-500" size={18} />}
+                            {isLowStock ? <AlertTriangle className="text-red-400" size={18} /> : <AlertTriangle className="text-amber-400" size={18} />}
                             <button 
                               onClick={withFeedback(() => {
                                 const libraryItem = state.library.find(l => l.name.toLowerCase() === item.name.toLowerCase());
@@ -1708,7 +1738,7 @@ export default function App() {
                                 setAddedToCartId(item.id);
                                 setTimeout(() => setAddedToCartId(null), 2000);
                               })}
-                              className={`p-1.5 transition-all bg-white rounded-lg shadow-sm border border-zinc-100 ${addedToCartId === item.id ? 'text-green-500 scale-110' : 'text-zinc-400 hover:text-primary'}`}
+                              className={`p-1.5 transition-all bg-white/10 rounded-lg border border-white/10 ${addedToCartId === item.id ? 'text-emerald-400 scale-110' : 'text-white/20 hover:text-sage'}`}
                               title="Add to shopping list"
                             >
                               {addedToCartId === item.id ? <Check size={12} /> : <ShoppingCart size={12} />}
@@ -1744,7 +1774,7 @@ export default function App() {
                         return (
                           <Card 
                             key={shoppingBags.id}
-                            className="group cursor-pointer hover:border-black transition-all relative bg-off-white border-secondary/20"
+                            className="bg-white/5 border-white/10 hover:border-sage/50 transition-all relative overflow-hidden group !p-6 backdrop-blur-md"
                             onClick={() => {
                               setSelectedLocationId(shoppingBags.id);
                               setView('inventory');
@@ -1752,14 +1782,14 @@ export default function App() {
                           >
                             <div className="flex items-center justify-between">
                               <div className="flex items-center gap-4">
-                                <div className="w-12 h-12 rounded-2xl bg-secondary/10 flex items-center justify-center text-2xl group-hover:bg-secondary group-hover:text-white transition-colors">
+                                <div className="w-12 h-12 rounded-2xl bg-sage/10 flex items-center justify-center text-2xl group-hover:bg-sage group-hover:text-forest transition-all">
                                   {shoppingBags.icon || '🛍️'}
                                 </div>
                                 <div>
-                                  <h4 className="font-bold text-lg text-charcoal">
+                                  <h4 className="font-bold text-lg text-white">
                                     {shoppingBags.name}
                                   </h4>
-                                  <p className="text-xs text-zinc-500">{locItems.length} items to sort</p>
+                                  <p className="text-xs text-sage/60 font-medium">{locItems.length} items to sort</p>
                                 </div>
                               </div>
                               <div className="flex items-center gap-2">
@@ -1771,12 +1801,12 @@ export default function App() {
                                     setSelectedLocationId(shoppingBags.id);
                                     setIsItemModalOpen(true);
                                   }}
-                                  className="w-10 h-10 bg-primary text-white rounded-full flex items-center justify-center shadow-md hover:scale-110 active:scale-90 transition-all z-20"
+                                  className="w-10 h-10 bg-sage text-forest rounded-full flex items-center justify-center shadow-2xl hover:scale-110 active:scale-95 transition-all z-20"
                                   title="Quick add to Shopping Bags"
                                 >
                                   <Plus size={20} />
                                 </button>
-                                <ChevronRight size={20} className="text-zinc-300 group-hover:text-secondary" />
+                                <ChevronRight size={24} className="text-white/20 group-hover:text-sage transition-colors" />
                               </div>
                             </div>
                           </Card>
@@ -1796,14 +1826,14 @@ export default function App() {
                           return (
                             <Card 
                               key={loc.id} 
-                              className="group cursor-pointer hover:border-black transition-all relative bg-off-white !p-3" 
+                              className="group cursor-pointer border-white/10 hover:border-sage transition-all relative bg-white/5 !p-3 backdrop-blur-sm" 
                               onClick={() => {
                                 setSelectedLocationId(loc.id);
                                 setView('inventory');
                               }}
                             >
                               <div className="flex items-center justify-between mb-2">
-                                <div className="w-8 h-8 rounded-lg bg-zinc-100 flex items-center justify-center text-lg group-hover:bg-secondary group-hover:text-white transition-colors">
+                                <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-lg group-hover:bg-sage group-hover:text-forest transition-colors">
                                   {loc.icon || '📦'}
                                 </div>
                                 <button 
@@ -1812,16 +1842,16 @@ export default function App() {
                                     setEditingLocation(loc);
                                     setIsAddingLocation(true);
                                   }}
-                                  className="p-1 text-zinc-300 hover:text-secondary transition-all"
+                                  className="p-1 text-white/20 hover:text-sage transition-all"
                                 >
                                   <Pencil size={12} />
                                 </button>
                               </div>
                               <div className="overflow-hidden mb-4">
-                                <h4 className="font-bold text-sm truncate">
+                                <h4 className="font-bold text-sm truncate text-white">
                                   {loc.name.replace(/^[^\w\s]+/, '').replace('Snowflake Freezer', 'Freezer').trim()}
                                 </h4>
-                                <p className="text-[10px] text-zinc-400 font-medium">{locItems.length} items</p>
+                                <p className="text-[10px] text-sage/60 font-medium">{locItems.length} items</p>
                               </div>
                               <button 
                                 onClick={(e) => {
@@ -1831,7 +1861,7 @@ export default function App() {
                                   setSelectedLocationId(loc.id);
                                   setIsItemModalOpen(true);
                                 }}
-                                className="absolute bottom-2 right-2 w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center shadow-md hover:scale-110 active:scale-90 transition-all z-20"
+                                className="absolute bottom-2 right-2 w-8 h-8 bg-sage text-forest rounded-full flex items-center justify-center shadow-lg hover:scale-110 active:scale-95 transition-all z-20"
                                 title={`Quick add to ${loc.name}`}
                               >
                                 <Plus size={16} />
@@ -1889,26 +1919,26 @@ export default function App() {
                 </div>
                 <div className="flex flex-row gap-2 relative w-full sm:w-auto">
                   {!selectedLocationId && (
-                    <div className="flex bg-zinc-100/50 p-1 rounded-xl border border-zinc-200/50">
-                      <button 
-                        onClick={() => setInventoryGrouping('category')}
-                        className={`px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all ${inventoryGrouping === 'category' ? 'bg-white text-charcoal shadow-sm' : 'text-zinc-400 hover:text-zinc-600'}`}
-                      >
-                        Categories
-                      </button>
-                      <button 
-                        onClick={() => setInventoryGrouping('location')}
-                        className={`px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all ${inventoryGrouping === 'location' ? 'bg-white text-charcoal shadow-sm' : 'text-zinc-400 hover:text-zinc-600'}`}
-                      >
-                        Units
-                      </button>
-                    </div>
+                  <div className="flex bg-white/5 p-1 rounded-xl border border-white/10">
+                    <button 
+                      onClick={() => setInventoryGrouping('category')}
+                      className={`px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all ${inventoryGrouping === 'category' ? 'bg-sage text-forest shadow-lg' : 'text-white/40 hover:text-white'}`}
+                    >
+                      Categories
+                    </button>
+                    <button 
+                      onClick={() => setInventoryGrouping('location')}
+                      className={`px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all ${inventoryGrouping === 'location' ? 'bg-sage text-forest shadow-lg' : 'text-white/40 hover:text-white'}`}
+                    >
+                      Units
+                    </button>
+                  </div>
                   )}
                   {selectedLocationId && (state.locations.find(l => l.id === selectedLocationId)?.name === '🛍️ Shopping Bags' || state.locations.find(l => l.id === selectedLocationId)?.name === 'Shopping Bags') && (
                     <div className="relative flex-1 sm:flex-none">
                       <Button 
                         variant="outline" 
-                        className="w-full sm:w-auto py-2 px-3 text-sm border-primary text-charcoal hover:bg-primary/10"
+                        className="w-full sm:w-auto py-2 px-3 text-sm border-white/10 text-white hover:bg-white/10"
                         onClick={() => setIsUnpackMenuOpen(!isUnpackMenuOpen)}
                       >
                         <ArrowRightLeft size={16} className="mr-1" />
@@ -1921,17 +1951,17 @@ export default function App() {
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: 10 }}
-                            className="absolute right-0 top-full mt-2 w-56 bg-white rounded-2xl shadow-xl border border-zinc-100 p-2 z-50"
+                            className="absolute right-0 top-full mt-2 w-56 bg-forest rounded-2xl shadow-2xl border border-white/10 p-2 z-50 backdrop-blur-xl"
                           >
-                            <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 px-3 py-2">Move to Storage Unit</p>
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-sage/60 px-3 py-2">Move to Storage Unit</p>
                             {state.locations.filter(l => l.name !== '🛍️ Shopping Bags').map(loc => (
                               <button
                                 key={loc.id}
                                 onClick={() => handleBulkMove(loc.id)}
-                                className="w-full text-left px-3 py-2.5 hover:bg-zinc-50 rounded-xl flex items-center gap-3 transition-all group"
+                                className="w-full text-left px-3 py-2.5 hover:bg-white/5 rounded-xl flex items-center gap-3 transition-all group"
                               >
                                 <span className="text-xl">{loc.icon}</span>
-                                <span className="text-sm font-medium text-charcoal group-hover:text-secondary">{loc.name.replace(/^[^\w\s]+/, '').trim()}</span>
+                                <span className="text-sm font-medium text-white/80 group-hover:text-sage">{loc.name.replace(/^[^\w\s]+/, '').trim()}</span>
                               </button>
                             ))}
                           </motion.div>
@@ -1941,8 +1971,7 @@ export default function App() {
                   )}
                   {selectedLocationId && (state.locations.find(l => l.id === selectedLocationId)?.name === '🛍️ Shopping Bags' || state.locations.find(l => l.id === selectedLocationId)?.name === 'Shopping Bags') && (
                     <Button 
-                      variant="primary" 
-                      className="flex-1 sm:flex-none py-2 px-3 text-sm bg-charcoal text-white hover:bg-charcoal/90 shadow-lg"
+                      className="flex-1 sm:flex-none py-2 px-3 text-sm bg-sage text-forest hover:bg-sage/90 shadow-2xl font-bold"
                       onClick={handlePrepareAutoSort}
                     >
                       ✨ Auto-Sort
@@ -2115,7 +2144,7 @@ export default function App() {
                                   leftIcon={<ShoppingCart size={24} />}
                                   rightIcon={<Trash2 size={24} />}
                                 >
-                                  <Card className={`flex flex-col gap-4 relative transition-all ${isSelected ? 'ring-2 ring-secondary bg-secondary/5' : ''}`}>
+                                  <Card className={`flex flex-col gap-4 relative transition-all bg-white/5 border-white/10 ${isSelected ? 'ring-2 ring-sage bg-sage/5' : ''}`}>
                                     {selectedLocationId && state.locations.find(l => l.id === selectedLocationId)?.name === '🛍️ Shopping Bags' && (
                                       <div className="absolute top-4 left-4 z-10">
                                         <input 
@@ -2130,7 +2159,7 @@ export default function App() {
                                             }
                                             setSelectedItemIds(newSelected);
                                           }}
-                                          className="w-5 h-5 rounded-lg border-zinc-300 text-secondary focus:ring-secondary cursor-pointer"
+                                          className="w-5 h-5 rounded-lg border-white/10 bg-white/5 text-sage focus:ring-sage cursor-pointer"
                                         />
                                       </div>
                                     )}
@@ -2138,14 +2167,14 @@ export default function App() {
                                       <div className="flex items-center gap-3">
                                         <div className="text-3xl">{item.icon}</div>
                                         <div className="overflow-hidden">
-                                          <h4 className="font-bold leading-tight truncate" title={item.name}>{item.name}</h4>
+                                          <h4 className="font-bold text-white leading-tight truncate" title={item.name}>{item.name}</h4>
                                           <div className="flex flex-col">
-                                            <p className="text-[10px] text-zinc-400 uppercase font-bold tracking-wider">{item.storageCategory || item.shoppingCategory}</p>
+                                            <p className="text-[10px] text-sage/60 uppercase font-bold tracking-wider">{item.storageCategory || item.shoppingCategory}</p>
                                             {(() => {
                                               const zone = state.zones.find(z => z.id === item.zone_id);
                                               const location = state.locations.find(l => l.id === zone?.location_id);
                                               return (
-                                                <p className="text-[9px] text-secondary font-bold truncate mt-0.5">
+                                                <p className="text-[9px] text-sage/40 font-bold truncate mt-0.5">
                                                   {location?.name} {zone ? `› ${zone.name}` : ''}
                                                 </p>
                                               );
@@ -2159,21 +2188,21 @@ export default function App() {
                                       </div>
                                     </div>
                                     
-                                    <div className="flex items-center justify-between bg-zinc-50 p-2 rounded-xl">
+                                    <div className="flex items-center justify-between bg-white/5 p-2 rounded-xl border border-white/5">
                                       <div className="flex items-center gap-2">
                                         <button 
                                           onClick={() => dispatch({ type: 'UPDATE_ITEM', payload: { ...item, quantity: Math.max(0, item.quantity - (item.unit_type === 'items' ? 1 : 100)), unit_type: item.unit_type } })}
-                                          className="w-8 h-8 flex items-center justify-center bg-white border border-zinc-100 rounded-lg hover:bg-zinc-100 active:scale-90 transition-all"
+                                          className="w-8 h-8 flex items-center justify-center bg-white/5 border border-white/10 rounded-lg text-white hover:bg-white/10 active:scale-90 transition-all"
                                         >
                                           -
                                         </button>
                                         <div className="flex flex-col items-center min-w-[60px]">
-                                          <span className="text-sm font-bold">{item.quantity}</span>
-                                          <span className="text-[10px] text-zinc-400 uppercase font-bold">{item.unit_type}</span>
+                                          <span className="text-sm font-bold text-white">{item.quantity}</span>
+                                          <span className="text-[10px] text-sage/40 uppercase font-bold">{item.unit_type}</span>
                                         </div>
                                         <button 
                                           onClick={() => dispatch({ type: 'UPDATE_ITEM', payload: { ...item, quantity: item.quantity + (item.unit_type === 'items' ? 1 : 100), unit_type: item.unit_type } })}
-                                          className="w-8 h-8 flex items-center justify-center bg-white border border-zinc-100 rounded-lg hover:bg-zinc-100 active:scale-90 transition-all"
+                                          className="w-8 h-8 flex items-center justify-center bg-white/5 border border-white/10 rounded-lg text-white hover:bg-white/10 active:scale-90 transition-all"
                                         >
                                           +
                                         </button>
@@ -2198,7 +2227,7 @@ export default function App() {
                                             setAddedToCartId(item.id);
                                             setTimeout(() => setAddedToCartId(null), 2000);
                                           })}
-                                          className={`p-2 transition-all ${addedToCartId === item.id ? 'text-green-500 scale-110' : 'text-zinc-400 hover:text-primary'}`}
+                                          className={`p-2 transition-all ${addedToCartId === item.id ? 'text-emerald-400 scale-110' : 'text-white/20 hover:text-sage'}`}
                                           title="Add to shopping list"
                                         >
                                           {addedToCartId === item.id ? <Check size={16} /> : <ShoppingCart size={16} />}
@@ -2209,15 +2238,15 @@ export default function App() {
                                             setModalContext('pantry');
                                             setIsItemModalOpen(true);
                                           }} 
-                                          className="p-2 text-zinc-400 hover:text-secondary transition-all"
+                                          className="p-2 text-white/20 hover:text-sage transition-all"
                                           title="Edit item"
                                         >
                                           <Pencil size={16} />
                                         </button>
-                                        <button onClick={() => setTransferItem(item)} className="p-2 text-secondary hover:opacity-80 transition-all">
+                                        <button onClick={() => setTransferItem(item)} className="p-2 text-sage hover:opacity-80 transition-all">
                                           <ArrowRightLeft size={16} />
                                         </button>
-                                        <button onClick={withFeedback(() => dispatch({ type: 'DELETE_ITEM', payload: { id: item.id } }), 'delete')} className="p-2 text-zinc-400 hover:text-red-500 transition-all">
+                                        <button onClick={withFeedback(() => dispatch({ type: 'DELETE_ITEM', payload: { id: item.id } }), 'delete')} className="p-2 text-white/20 hover:text-red-500 transition-all">
                                           <Trash2 size={16} />
                                         </button>
                                       </div>
@@ -2263,34 +2292,34 @@ export default function App() {
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <h2 className="text-2xl font-bold tracking-tight">Shopping List</h2>
                 <div className="flex flex-wrap gap-2">
-                  <Button variant="outline" onClick={exportShoppingListPDF}>
+                  <Button variant="outline" onClick={exportShoppingListPDF} className="border-white/10 text-white hover:bg-white/10">
                     <FileDown size={18} /> Export PDF
                   </Button>
                   <Button onClick={() => {
                     setModalItem(null);
                     setModalContext('shopping');
                     setIsItemModalOpen(true);
-                  }}>
+                  }} className="bg-sage text-forest hover:bg-sage/90">
                     <Plus size={18} /> Add Item
                   </Button>
                 </div>
               </div>
 
-              <div className="flex items-center justify-between bg-white/40 backdrop-blur-sm p-4 rounded-2xl border border-primary/20">
+              <div className="flex items-center justify-between bg-white/5 backdrop-blur-md p-4 rounded-2xl border border-white/10">
                 <div className="flex items-center gap-3">
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${isStoreSortingEnabled ? 'bg-secondary text-white' : 'bg-zinc-100 text-zinc-400'}`}>
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${isStoreSortingEnabled ? 'bg-sage text-forest' : 'bg-white/5 text-white/20'}`}>
                     <Filter size={20} />
                   </div>
                   <div>
-                    <h4 className="text-sm font-bold text-charcoal">Group by Store</h4>
-                    <p className="text-[10px] text-zinc-500 uppercase tracking-wider font-bold">Organize your list by shop</p>
+                    <h4 className="text-sm font-bold text-white">Group by Store</h4>
+                    <p className="text-[10px] text-sage/40 uppercase tracking-wider font-bold">Organize your list by shop</p>
                   </div>
                 </div>
                 <button 
                   onClick={() => setIsStoreSortingEnabled(!isStoreSortingEnabled)}
-                  className={`w-12 h-6 rounded-full transition-all relative ${isStoreSortingEnabled ? 'bg-secondary' : 'bg-zinc-200'}`}
+                  className={`w-12 h-6 rounded-full transition-all relative ${isStoreSortingEnabled ? 'bg-sage' : 'bg-white/10'}`}
                 >
-                  <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${isStoreSortingEnabled ? 'left-7' : 'left-1'}`} />
+                  <div className={`absolute top-1 w-4 h-4 rounded-full ${isStoreSortingEnabled ? 'bg-forest' : 'bg-white/40'} transition-all ${isStoreSortingEnabled ? 'left-7' : 'left-1'}`} />
                 </button>
               </div>
 
@@ -2348,9 +2377,9 @@ export default function App() {
                   <VoiceInput 
                     name="quickAdd"
                     placeholder="Quick add: '2 kg Milk' or 'Eggs'..."
-                    className="flex-1 bg-zinc-50 border-none text-sm"
+                    className="flex-1 bg-white/5 border-white/10 text-white text-sm"
                   />
-                  <Button type="submit" className="px-6 h-[48px]">Add</Button>
+                  <Button type="submit" className="px-6 h-[48px] bg-sage text-forest hover:bg-sage/90 font-bold">Add</Button>
                 </form>
               </div>
 
@@ -2907,30 +2936,30 @@ export default function App() {
       </main>
 
       {/* Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-off-white/70 backdrop-blur-[12px] border-t border-black/5 px-6 py-4 flex items-center justify-around z-40 will-change-[backdrop-filter]">
-        <button onClick={withFeedback(() => setView('dashboard'))} className={`flex flex-col items-center gap-1 ${view === 'dashboard' ? 'text-primary' : 'text-zinc-400'}`}>
+      <nav className="fixed bottom-0 left-0 right-0 bg-forest/80 backdrop-blur-md border-t border-white/10 px-6 py-4 flex items-center justify-around z-40">
+        <button onClick={withFeedback(() => setView('dashboard'))} className={`flex flex-col items-center gap-1 ${view === 'dashboard' ? 'text-sage' : 'text-white/40 hover:text-white'}`}>
           <LayoutDashboard size={24} />
           <span className="text-[10px] font-bold uppercase tracking-widest">Home</span>
         </button>
         <button onClick={withFeedback(() => {
           setSelectedLocationId(null);
           setView('inventory');
-        })} className={`flex flex-col items-center gap-1 ${view === 'inventory' ? 'text-primary' : 'text-zinc-400'}`}>
+        })} className={`flex flex-col items-center gap-1 ${view === 'inventory' ? 'text-sage' : 'text-white/40 hover:text-white'}`}>
           <Package size={24} />
           <span className="text-[10px] font-bold uppercase tracking-widest">Pantry</span>
         </button>
-        <button onClick={withFeedback(() => setView('shopping'))} className={`flex flex-col items-center gap-1 ${view === 'shopping' ? 'text-primary' : 'text-zinc-400'}`}>
+        <button onClick={withFeedback(() => setView('shopping'))} className={`flex flex-col items-center gap-1 ${view === 'shopping' ? 'text-sage' : 'text-white/40 hover:text-white'}`}>
           <div className="relative">
             <ShoppingCart size={24} />
             {state.shoppingList.filter(i => !i.purchased).length > 0 && (
-              <span className="absolute -top-1 -right-1 w-4 h-4 bg-primary text-white text-[8px] flex items-center justify-center rounded-full font-bold">
+              <span className="absolute -top-1 -right-1 w-4 h-4 bg-sage text-forest text-[8px] flex items-center justify-center rounded-full font-bold">
                 {state.shoppingList.filter(i => !i.purchased).length}
               </span>
             )}
           </div>
           <span className="text-[10px] font-bold uppercase tracking-widest">List</span>
         </button>
-        <button onClick={withFeedback(() => setView('recipes'))} className={`flex flex-col items-center gap-1 ${view === 'recipes' ? 'text-primary' : 'text-zinc-400'}`}>
+        <button onClick={withFeedback(() => setView('recipes'))} className={`flex flex-col items-center gap-1 ${view === 'recipes' ? 'text-sage' : 'text-white/40 hover:text-white'}`}>
           <ChefHat size={24} />
           <span className="text-[10px] font-bold uppercase tracking-widest">Cook</span>
         </button>
@@ -2958,17 +2987,17 @@ export default function App() {
             />
             <motion.div 
               initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
-              className="relative w-full max-w-lg bg-off-white rounded-t-[20px] sm:rounded-[20px] p-8 overflow-y-auto max-h-[90vh]"
+              className="relative w-full max-w-lg bg-forest rounded-t-[20px] sm:rounded-[20px] p-8 overflow-y-auto max-h-[90vh] border border-white/10"
             >
               <div className="flex items-center justify-between mb-6">
-                <h3 className="text-2xl font-serif font-bold text-charcoal">
+                <h3 className="text-2xl font-bold text-white">
                   {modalItem?.id ? 'Edit Item' : modalContext === 'shopping' ? 'Add to List' : 'Add to Pantry'}
                 </h3>
                 <button onClick={() => {
                   setIsItemModalOpen(false);
                   setModalItem(null);
                   setManualBarcode('');
-                }} className="text-zinc-400 hover:text-black">
+                }} className="text-white/20 hover:text-white">
                   <X size={24} />
                 </button>
               </div>
@@ -3571,19 +3600,19 @@ export default function App() {
             />
             <motion.div 
               initial={{ scale: 0.9, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.9, opacity: 0, y: 20 }}
-              className="relative w-full max-w-md bg-white rounded-[32px] p-8 shadow-2xl"
+              className="relative w-full max-w-md bg-forest rounded-[32px] p-8 shadow-2xl border border-white/10 backdrop-blur-xl"
             >
               <div className="flex items-center justify-between mb-8">
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-secondary/10 rounded-2xl flex items-center justify-center text-secondary">
+                  <div className="w-12 h-12 bg-sage/10 rounded-2xl flex items-center justify-center text-sage">
                     <Home size={24} />
                   </div>
                   <div>
-                    <h3 className="text-xl font-bold text-charcoal">Household Settings</h3>
-                    <p className="text-sm text-zinc-500">Manage your shared space</p>
+                    <h3 className="text-xl font-bold text-white">Household Settings</h3>
+                    <p className="text-sm text-sage/40">Manage your shared space</p>
                   </div>
                 </div>
-                <button onClick={() => setIsHouseholdSettingsOpen(false)} className="text-zinc-400 hover:text-zinc-600">
+                <button onClick={() => setIsHouseholdSettingsOpen(false)} className="text-white/20 hover:text-white transition-colors">
                   <X size={24} />
                 </button>
               </div>
@@ -3627,7 +3656,7 @@ export default function App() {
                       Copy
                     </button>
                   </div>
-                  <div className="text-3xl font-mono font-bold tracking-widest text-charcoal mb-6 text-center bg-zinc-50 py-4 rounded-2xl border border-dashed border-zinc-200">
+                  <div className="text-3xl font-mono font-bold tracking-widest text-sage mb-6 text-center bg-white/5 py-4 rounded-2xl border border-dashed border-white/10">
                     {household?.invite_code}
                   </div>
                   
@@ -3668,7 +3697,7 @@ export default function App() {
               <span className="text-sm font-medium">Item removed.</span>
               <button 
                 onClick={withFeedback(handleUndoDelete, 'success')}
-                className="text-secondary font-bold text-sm uppercase tracking-widest hover:opacity-80 transition-all"
+                className="text-sage font-bold text-sm uppercase tracking-widest hover:opacity-80 transition-all"
               >
                 Undo
               </button>
