@@ -32,7 +32,12 @@ import {
   Cloud,
   Camera,
   Calendar,
-  Pencil as EditIcon
+  Pencil as EditIcon,
+  Refrigerator,
+  Snowflake,
+  ShoppingBag,
+  Archive,
+  Box
 } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 import { motion, AnimatePresence } from 'motion/react';
@@ -43,6 +48,22 @@ import { usePantry } from './hooks/usePantry';
 import { supabase } from './supabaseClient';
 import { CATEGORIES, Category, Item, Location, Zone, OFFICIAL_ICONS, User, Household } from './types';
 import { getRecipeSuggestions } from './services/geminiService';
+
+const LOCATION_ICONS: Record<string, React.ReactNode> = {
+  'Fridge': <Refrigerator className="text-sage" size={24} />,
+  'Freezer': <Snowflake className="text-sage" size={24} />,
+  'Shopping Bags': <ShoppingBag className="text-sage" size={24} />,
+  'Cupboards': <Archive className="text-sage" size={24} />,
+  'Other': <Box className="text-sage" size={24} />
+};
+
+const LOCATION_ICONS_LARGE: Record<string, React.ReactNode> = {
+  'Fridge': <Refrigerator className="text-sage" size={32} />,
+  'Freezer': <Snowflake className="text-sage" size={32} />,
+  'Shopping Bags': <ShoppingBag className="text-sage" size={32} />,
+  'Cupboards': <Archive className="text-sage" size={32} />,
+  'Other': <Box className="text-sage" size={32} />
+};
 // --- Utilities ---
 
 const playClick = () => {
@@ -1091,23 +1112,49 @@ export default function App() {
 
   const seedDefaultLocations = async (targetHouseholdId: string) => {
     try {
-      console.log('SEEDING EMERGENCY: Creating 5 default units for', targetHouseholdId);
+      console.log('SEEDING CHECK: Verifying units for', targetHouseholdId);
       
-      const defaultLocations = [
-        { name: 'Shopping Bags', icon: '🛍️', household_id: targetHouseholdId, id: uuidv4() },
-        { name: 'Fridge', icon: '❄️', household_id: targetHouseholdId, id: uuidv4() },
-        { name: 'Freezer', icon: '❄️', household_id: targetHouseholdId, id: uuidv4() },
-        { name: 'Cupboards', icon: '🥫', household_id: targetHouseholdId, id: uuidv4() },
-        { name: 'Other', icon: '📦', household_id: targetHouseholdId, id: uuidv4() }
+      // 1. Fetch existing locations for this household
+      const { data: existingLocations, error: fetchError } = await supabase
+        .from('locations')
+        .select('name')
+        .eq('household_id', targetHouseholdId);
+      
+      if (fetchError) throw fetchError;
+
+      const existingNames = new Set(existingLocations?.map(l => l.name) || []);
+      const defaults = [
+        { name: 'Shopping Bags', icon: '🛍️' },
+        { name: 'Fridge', icon: '❄️' },
+        { name: 'Freezer', icon: '❄️' },
+        { name: 'Cupboards', icon: '🥫' },
+        { name: 'Other', icon: '📦' }
       ];
+
+      // 2. Filter out defaults that already exist
+      const toSeed = defaults.filter(d => !existingNames.has(d.name));
+
+      if (toSeed.length === 0) {
+        console.log('SEEDING SKIP: All default units already exist.');
+        return;
+      }
+
+      console.log('SEEDING ACTION: Creating units:', toSeed.map(s => s.name).join(', '));
+      
+      const newLocations = toSeed.map(d => ({
+        ...d,
+        household_id: targetHouseholdId,
+        id: uuidv4()
+      }));
 
       const { error: seedError } = await supabase
         .from('locations')
-        .insert(defaultLocations);
+        .insert(newLocations);
       
       if (seedError) throw seedError;
 
-      const defaultZones = defaultLocations.map(loc => ({
+      // 3. Seed default zones for ONLY the new locations
+      const defaultZones = newLocations.map(loc => ({
         id: uuidv4(),
         name: 'Main',
         location_id: loc.id
@@ -1119,7 +1166,7 @@ export default function App() {
       
       if (zoneError) throw zoneError;
       
-      console.log('SEEDING SUCCESS: 5 units and zones created.');
+      console.log('SEEDING SUCCESS: Missing units and zones created.');
       refresh();
     } catch (err) {
       console.error('SEEDING FAILURE:', err);
@@ -1903,8 +1950,10 @@ export default function App() {
                             >
                               <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-4">
-                                  <div className="w-14 h-14 rounded-2xl bg-sage/10 flex items-center justify-center text-3xl group-hover:bg-sage group-hover:text-forest transition-all shadow-inner">
-                                    {shoppingBags.icon || '🛍️'}
+                                  <div className="w-14 h-14 rounded-2xl bg-sage/10 flex items-center justify-center group-hover:bg-sage group-hover:text-forest transition-all shadow-inner">
+                                    {LOCATION_ICONS_LARGE[shoppingBags.name] || (
+                                      <span className="text-3xl">{shoppingBags.icon || '🛍️'}</span>
+                                    )}
                                   </div>
                                   <div>
                                     <h4 className="font-bold text-xl text-white">
@@ -1959,8 +2008,10 @@ export default function App() {
                                 }}
                               >
                                 <div className="flex items-center justify-between mb-2">
-                                  <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-xl group-hover:bg-sage group-hover:text-forest transition-colors">
-                                    {loc.icon || '📦'}
+                                  <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center group-hover:bg-sage group-hover:text-forest transition-colors">
+                                    {LOCATION_ICONS[loc.name] || (
+                                      <span className="text-xl">{loc.icon || '📦'}</span>
+                                    )}
                                   </div>
                                   <button 
                                     onClick={(e) => {
@@ -2020,8 +2071,10 @@ export default function App() {
                                     }}
                                   >
                                     <div className="flex items-center justify-between mb-2">
-                                      <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-lg group-hover:bg-sage group-hover:text-forest transition-colors">
-                                        {loc.icon || '📦'}
+                                      <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center group-hover:bg-sage group-hover:text-forest transition-colors">
+                                        {LOCATION_ICONS[loc.name] || (
+                                          <span className="text-lg">{loc.icon || '📦'}</span>
+                                        )}
                                       </div>
                                       <button 
                                         onClick={(e) => {
