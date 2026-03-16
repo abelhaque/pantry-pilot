@@ -1,0 +1,16 @@
+{
+  "headers": {
+    "x-nextjs-stale-time": "300",
+    "x-nextjs-prerender": "1",
+    "x-next-cache-tags": "_N_T_/layout,_N_T_/household/layout,_N_T_/household/settings/layout,_N_T_/household/settings/page,_N_T_/household/settings"
+  },
+  "segmentPaths": [
+    "/_tree",
+    "/_full",
+    "/household/settings/__PAGE__",
+    "/household/settings",
+    "/household",
+    "/_index",
+    "/_head"
+  ]
+}

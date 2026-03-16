@@ -1,196 +1,129 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { PantryState } from '../types';
+import { useState, useEffect, useCallback } from 'react';
+import { PantryState, Item, Location, Zone } from '../types';
+import { supabase } from '../supabaseClient';
 import { v4 as uuidv4 } from 'uuid';
 
 export function usePantry(householdId: string | null) {
-  const [state, setState] = useState<PantryState>(() => {
-    if (householdId) {
-      const cached = localStorage.getItem(`pantry_state_${householdId}`);
-      if (cached) {
-        try {
-          return JSON.parse(cached);
-        } catch (e) {}
-      }
-    }
-    return {
-      locations: [],
-      zones: [],
-      items: [],
-      shoppingList: [],
-      library: [],
-      mealPlans: [],
-    };
+  const [state, setState] = useState<PantryState>({
+    locations: [],
+    zones: [],
+    items: [],
+    shoppingList: [],
+    library: [],
+    mealPlans: [],
   });
   
   const [isConnected, setIsConnected] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
-  const socketRef = useRef<WebSocket | null>(null);
-  const reconnectTimeoutRef = useRef<number | null>(null);
+
+  const fetchData = useCallback(async () => {
+    if (!householdId) {
+      console.warn('fetchData called without householdId');
+      return;
+    }
+    setIsSyncing(true);
+    
+    try {
+      console.log('Initiating Supabase Fetch for Household:', householdId);
+      const [
+        { data: items, error: itemsError },
+        { data: locations, error: locationsError },
+        { data: zones, error: zonesError },
+        { data: shoppingList, error: shoppingError }
+      ] = await Promise.all([
+        supabase.from('items').select('*').eq('household_id', householdId),
+        supabase.from('locations').select('*').eq('household_id', householdId),
+        supabase.from('zones').select('*'),
+        supabase.from('shopping_list').select('*').eq('household_id', householdId)
+      ]);
+
+      if (itemsError) console.error('Supabase Error (items):', itemsError);
+      if (locationsError) console.error('Supabase Error (locations):', locationsError);
+      if (zonesError) console.error('Supabase Error (zones):', zonesError);
+      if (shoppingError) console.error('Supabase Error (shopping):', shoppingError);
+
+      console.log('Supabase Data (items):', items);
+      console.log('Supabase Data (locations):', locations);
+      console.log('Supabase Data (shopping_list):', shoppingList);
+
+      setState(prev => ({
+        ...prev,
+        items: items || [],
+        locations: locations || [],
+        zones: zones || [],
+        shoppingList: shoppingList || [],
+      }));
+      setIsConnected(true);
+    } catch (error) {
+      console.error('Supabase Error (catch):', error);
+      setIsConnected(false);
+    } finally {
+      setIsSyncing(false);
+    }
+  }, [householdId]);
 
   useEffect(() => {
     if (!householdId) return;
 
-    let socket: WebSocket;
+    fetchData();
 
-    const connect = () => {
-      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      socket = new WebSocket(`${protocol}//${window.location.host}`);
-      socketRef.current = socket;
-
-      socket.onopen = () => {
-        setIsConnected(true);
-        socket.send(JSON.stringify({ type: 'subscribe', householdId }));
-        
-        // Replay queued actions
-        const queuedActionsStr = localStorage.getItem(`pantry_queue_${householdId}`);
-        if (queuedActionsStr) {
-          try {
-            const queuedActions = JSON.parse(queuedActionsStr);
-            if (queuedActions.length > 0) {
-              setIsSyncing(true);
-              queuedActions.forEach((action: any) => {
-                socket.send(JSON.stringify({ type: 'action', action }));
-              });
-              localStorage.removeItem(`pantry_queue_${householdId}`);
-              
-              // Dispatch custom event for toast
-              window.dispatchEvent(new CustomEvent('pantry-sync-complete'));
-              
-              setTimeout(() => setIsSyncing(false), 1500);
-            }
-          } catch (e) {
-            console.error('Failed to replay queued actions', e);
-          }
-        }
-      };
-
-      socket.onmessage = (event) => {
-        const data = JSON.parse(event.data);
-        if (data.type === 'init' || data.type === 'update') {
-          setState(data.state);
-          localStorage.setItem(`pantry_state_${householdId}`, JSON.stringify(data.state));
-        }
-      };
-
-      socket.onclose = () => {
-        setIsConnected(false);
-        // Attempt to reconnect
-        reconnectTimeoutRef.current = window.setTimeout(connect, 3000);
-      };
-      
-      socket.onerror = () => {
-        // Error will trigger close, which triggers reconnect
-      };
-    };
-
-    connect();
+    // Set up Realtime subscriptions
+    const itemsSubscription = supabase
+      .channel('pantry-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'items', filter: `household_id=eq.${householdId}` }, () => fetchData())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'locations', filter: `household_id=eq.${householdId}` }, () => fetchData())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'shopping_list', filter: `household_id=eq.${householdId}` }, () => fetchData())
+      .subscribe();
 
     return () => {
-      if (reconnectTimeoutRef.current) clearTimeout(reconnectTimeoutRef.current);
-      if (socketRef.current) socketRef.current.close();
+      supabase.removeChannel(itemsSubscription);
     };
-  }, [householdId]);
+  }, [householdId, fetchData]);
 
-  const dispatch = useCallback((action: { type: string; payload: any }) => {
-    // Ensure ADD actions have an ID so offline updates to them work
-    if ((action.type === 'ADD_ITEM' || action.type === 'ADD_TO_SHOPPING') && !action.payload.id) {
-      action.payload.id = uuidv4();
-    }
+  const dispatch = useCallback(async (action: { type: string; payload: any }) => {
+    if (!householdId) return;
 
-    console.log('Dispatching action:', action);
+    const { type, payload } = action;
     
-    if (socketRef.current?.readyState === WebSocket.OPEN && navigator.onLine) {
-      socketRef.current.send(JSON.stringify({ type: 'action', action }));
-    } else {
-      console.warn('Offline. Queuing action:', action);
-      if (householdId) {
-        const queueStr = localStorage.getItem(`pantry_queue_${householdId}`);
-        const queue = queueStr ? JSON.parse(queueStr) : [];
-        queue.push(action);
-        localStorage.setItem(`pantry_queue_${householdId}`, JSON.stringify(queue));
-        
-        // Optimistic UI update
-        setState(prevState => optimisticUpdate(prevState, action));
+    try {
+      switch (type) {
+        case 'ADD_ITEM':
+          await supabase.from('items').insert([{ ...payload, household_id: householdId, id: payload.id || uuidv4() }]);
+          break;
+        case 'UPDATE_ITEM':
+          await supabase.from('items').update(payload).eq('id', payload.id);
+          break;
+        case 'DELETE_ITEM':
+          await supabase.from('items').delete().eq('id', payload.id);
+          break;
+        case 'ADD_TO_SHOPPING':
+          await supabase.from('shopping_list').insert([{ ...payload, household_id: householdId, id: payload.id || uuidv4() }]);
+          break;
+        case 'UPDATE_SHOPPING_ITEM':
+          await supabase.from('shopping_list').update(payload).eq('id', payload.id);
+          break;
+        case 'DELETE_SHOPPING_ITEM':
+          await supabase.from('shopping_list').delete().eq('id', payload.id);
+          break;
+        case 'MARK_PURCHASED':
+          await supabase.from('shopping_list').update({ purchased: 1 }).eq('id', payload.id);
+          break;
+        case 'CLEAR_PURCHASED':
+          await supabase.from('shopping_list').delete().eq('purchased', 1).eq('household_id', householdId);
+          await fetchData();
+          break;
+        case 'TRANSFER_ITEM':
+          await supabase.from('items').update({ zone_id: payload.targetZoneId }).eq('id', payload.itemId);
+          break;
+        case 'BULK_TRANSFER_ITEMS':
+          await supabase.from('items').update({ zone_id: payload.targetZoneId }).in('id', payload.itemIds);
+          break;
       }
+    } catch (error) {
+      console.error(`Error performing action ${type}:`, error);
     }
-  }, [householdId]);
+  }, [householdId, fetchData]);
 
   return { state, isConnected, isSyncing, dispatch };
 }
 
-function optimisticUpdate(state: PantryState, action: any): PantryState {
-  const { type, payload } = action;
-  const newState = { ...state };
-  
-  try {
-    switch (type) {
-      case 'ADD_ITEM':
-        const existingItem = newState.items.find(i => 
-          i.name.toLowerCase() === payload.name.toLowerCase() && 
-          i.storageCategory === payload.storageCategory && 
-          i.zone_id === (payload.zone_id || payload.zoneId)
-        );
-        if (existingItem) {
-          newState.items = newState.items.map(i => 
-            i.id === existingItem.id ? { ...i, quantity: (i.quantity || 0) + (payload.quantity || 0) } : i
-          );
-        } else {
-          newState.items = [...newState.items, { ...payload, id: payload.id || 'temp-' + Date.now() }];
-        }
-        break;
-      case 'UPDATE_ITEM':
-        newState.items = newState.items.map(i => i.id === payload.id ? { ...i, ...payload } : i);
-        break;
-      case 'DELETE_ITEM':
-        newState.items = newState.items.filter(i => i.id !== payload.id);
-        break;
-      case 'MARK_PURCHASED':
-        newState.shoppingList = newState.shoppingList.map(i => i.id === payload.id ? { ...i, purchased: 1 } : i);
-        break;
-      case 'DELETE_SHOPPING_ITEM':
-        newState.shoppingList = newState.shoppingList.filter(i => i.id !== payload.id);
-        break;
-      case 'ADD_TO_SHOPPING':
-        const existingShopping = newState.shoppingList.find(i => 
-          i.name.toLowerCase() === payload.name.toLowerCase() && 
-          i.shoppingCategory === payload.shoppingCategory && 
-          i.purchased === 0
-        );
-        if (existingShopping) {
-          newState.shoppingList = newState.shoppingList.map(i => 
-            i.id === existingShopping.id ? { ...i, quantity: (i.quantity || 0) + (payload.quantity || 1) } : i
-          );
-        } else {
-          newState.shoppingList = [...newState.shoppingList, { ...payload, id: payload.id || 'temp-' + Date.now(), purchased: 0 }];
-        }
-        break;
-      case 'UPDATE_SHOPPING_ITEM':
-        newState.shoppingList = newState.shoppingList.map(i => i.id === payload.id ? { ...i, ...payload } : i);
-        break;
-      case 'TRANSFER_ITEM':
-        newState.items = newState.items.map(i => i.id === (payload.item_id || payload.itemId) ? { ...i, zone_id: (payload.target_zone_id || payload.targetZoneId) } : i);
-        break;
-      case 'BULK_TRANSFER_ITEMS':
-        newState.items = newState.items.map(i => payload.itemIds.includes(i.id) ? { ...i, zone_id: payload.targetZoneId } : i);
-        break;
-      case 'CLEAR_PURCHASED':
-        newState.shoppingList = newState.shoppingList.filter(i => i.purchased !== 1);
-        break;
-      case 'UPDATE_MEAL_PLAN':
-        const existingMealIdx = newState.mealPlans.findIndex(m => m.id === payload.id);
-        if (existingMealIdx >= 0) {
-          newState.mealPlans = newState.mealPlans.map(m => m.id === payload.id ? { ...m, ...payload } : m);
-        } else {
-          newState.mealPlans = [...newState.mealPlans, payload];
-        }
-        break;
-      case 'DELETE_MEAL_PLAN':
-        newState.mealPlans = newState.mealPlans.filter(m => m.id !== payload.id);
-        break;
-    }
-  } catch (e) {
-    console.error("Optimistic update failed", e);
-  }
-  
-  return newState;
-}

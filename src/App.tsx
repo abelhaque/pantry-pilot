@@ -1493,51 +1493,47 @@ export default function App() {
       {/* Main Content */}
       <main className="max-w-5xl mx-auto px-6 pt-6">
         
-        {/* Search & Categories */}
-        <div className="mb-8 space-y-4">
-          <div className="relative">
-            <VoiceInput
-              value={searchQuery}
-              onChange={(e: any) => {
-                setSearchQuery(e.target.value);
-                if (e.target.value.length > 0 && view === 'dashboard') {
-                  setView('inventory');
-                  setSelectedLocationId(null);
-                }
-              }}
-              placeholder="Search pantry..."
-              className="bg-white/50 border-none"
-              iconLeft={<Search size={18} />}
-              clearable={true}
-              onClear={() => setSearchQuery('')}
-            />
-          </div>
-          <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
-            <button 
-              onClick={() => {
-                setSelectedCategory(null);
-                if (view === 'dashboard') setView('inventory');
-              }}
-              className={`px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-all ${!selectedCategory ? 'bg-black text-white' : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'}`}
-            >
-              All
-            </button>
-            {CATEGORIES.map(cat => (
-              <button 
-                key={cat.name}
-                onClick={() => {
-                  const newCat = cat.name === selectedCategory ? null : cat.name;
-                  setSelectedCategory(newCat);
-                  if (view === 'dashboard' && newCat) setView('inventory');
+        {/* Search & Categories - Only visible on Inventory View */}
+        {view === 'inventory' && (
+          <div className="mb-8 space-y-4">
+            <div className="relative">
+              <VoiceInput
+                value={searchQuery}
+                onChange={(e: any) => {
+                  setSearchQuery(e.target.value);
                 }}
-                className={`px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap flex items-center gap-2 transition-all ${selectedCategory === cat.name ? 'bg-black text-white' : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'}`}
+                placeholder="Search pantry..."
+                className="bg-white/50 border-none"
+                iconLeft={<Search size={18} />}
+                clearable={true}
+                onClear={() => setSearchQuery('')}
+              />
+            </div>
+            <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
+              <button 
+                onClick={() => {
+                  setSelectedCategory(null);
+                }}
+                className={`px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-all ${!selectedCategory ? 'bg-black text-white' : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'}`}
               >
-                <span>{cat.icon}</span>
-                <span>{cat.name}</span>
+                All
               </button>
-            ))}
+              {CATEGORIES.map(cat => (
+                <button 
+                  key={cat.name}
+                  onClick={() => {
+                    const newCat = cat.name === selectedCategory ? null : cat.name;
+                    setSelectedCategory(newCat);
+                  }}
+                  className={`px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap flex items-center gap-2 transition-all ${selectedCategory === cat.name ? 'bg-black text-white' : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'}`}
+                >
+                  <span>{cat.icon}</span>
+                  <span>{cat.name}</span>
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
         <AnimatePresence mode="wait">
           {view === 'dashboard' && (
@@ -1548,23 +1544,23 @@ export default function App() {
               {/* Primary Feature Cards */}
               <div className="grid grid-cols-2 gap-4 md:gap-6">
                 <Card 
-                  className="flex flex-col items-center justify-center h-44 hover:shadow-lg hover:-translate-y-1 transition-all cursor-pointer group p-4 text-center"
+                  className="flex flex-col items-center justify-center h-44 hover:shadow-lg hover:-translate-y-1 transition-all cursor-pointer group p-4 text-center bg-primary text-white"
                   onClick={() => setView('inventory')}
                 >
                   <div className="text-4xl mb-3 group-hover:scale-110 transition-transform">🏠</div>
                   <div className="flex flex-col items-center">
-                    <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest font-sans mb-1">Total Items</span>
-                    <span className="text-4xl font-bold text-charcoal tracking-tight leading-none">{state.items.length}</span>
+                    <span className="text-[10px] font-bold text-white/60 uppercase tracking-widest font-sans mb-1">Total Items</span>
+                    <span className="text-4xl font-bold text-white tracking-tight leading-none">{state.items.length}</span>
                   </div>
                 </Card>
                 <Card 
-                  className="flex flex-col items-center justify-center h-44 hover:shadow-lg hover:-translate-y-1 transition-all cursor-pointer group p-4 text-center"
+                  className="flex flex-col items-center justify-center h-44 hover:shadow-lg hover:-translate-y-1 transition-all cursor-pointer group p-4 text-center bg-secondary text-white"
                   onClick={() => setView('shopping')}
                 >
                   <div className="text-4xl mb-3 group-hover:scale-110 transition-transform">📝</div>
                   <div className="flex flex-col items-center">
-                    <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest font-sans mb-1">To Buy</span>
-                    <span className="text-4xl font-bold text-charcoal tracking-tight leading-none">{state.shoppingList.filter(i => !i.purchased).length}</span>
+                    <span className="text-[10px] font-bold text-white/60 uppercase tracking-widest font-sans mb-1">To Buy</span>
+                    <span className="text-4xl font-bold text-white tracking-tight leading-none">{state.shoppingList.filter(i => !i.purchased).length}</span>
                   </div>
                 </Card>
               </div>
