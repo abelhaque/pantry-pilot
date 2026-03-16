@@ -42,11 +42,6 @@ import { QRCodeCanvas } from 'qrcode.react';
 import { usePantry } from './hooks/usePantry';
 import { supabase } from './supabaseClient';
 import { CATEGORIES, Category, Item, Location, Zone, OFFICIAL_ICONS, User, Household } from './types';
-import { getRecipeSuggestions } from './services/geminiService';
-
-console.log('DEBUG - URL exists:', !!import.meta.env.VITE_SUPABASE_URL);
-console.log('DEBUG - URL value:', import.meta.env.VITE_SUPABASE_URL); // Log the actual value (obfuscated if needed, but here helpful)
-
 // --- Utilities ---
 
 const playClick = () => {
@@ -622,7 +617,11 @@ import { mapOpenFoodFactsCategory } from './utils/categoryMapper';
 // --- Main App ---
 
 export default function App() {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<User | null>(() => {
+    const saved = localStorage.getItem('pantry_pilot_user');
+    return saved ? JSON.parse(saved) : null;
+  });
+  const [passwordInput, setPasswordInput] = useState('');
   const [household, setHousehold] = useState<Household | null>(null);
   const [isHouseholdSettingsOpen, setIsHouseholdSettingsOpen] = useState(false);
   const [onboardingStep, setOnboardingStep] = useState<'choice' | 'create' | 'join'>('choice');
@@ -997,10 +996,51 @@ export default function App() {
     return null;
   };
 
-  // Auth / Session
+  // Official Supabase Auth Session Tracking
   useEffect(() => {
+    const initAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        // Map Auth User to our App User type
+        const appUser = {
+          id: session.user.id,
+          email: session.user.email || '',
+          household_id: session.user.user_metadata?.household_id || null
+        };
+        setUser(appUser as User);
+        if (appUser.household_id) {
+          fetchHousehold(appUser.household_id);
+        }
+      }
+    };
+
+    initAuth();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        const appUser = {
+          id: session.user.id,
+          email: session.user.email || '',
+          household_id: session.user.user_metadata?.household_id || null
+        };
+        setUser(appUser as User);
+        localStorage.setItem('pantry_pilot_user', JSON.stringify(appUser));
+        if (appUser.household_id) {
+          fetchHousehold(appUser.household_id);
+        }
+      } else {
+        setUser(null);
+        localStorage.removeItem('pantry_pilot_user');
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    // Legacy session sync (can be removed later)
     const savedUser = localStorage.getItem('pantry_pilot_user');
-    if (savedUser) {
+    if (savedUser && !user) {
       try {
         const parsedUser = JSON.parse(savedUser);
         setUser(parsedUser);
@@ -1031,46 +1071,29 @@ export default function App() {
   };
 
   const handleAuth = async (email: string) => {
-    if (!email) return;
-    console.log('Attempting auth for:', email);
+    if (!email || !passwordInput) return;
     setIsLoggingIn(true);
     setAuthError(null);
 
     try {
-      // Direct Supabase lookup for the user
-      const { data, error } = await supabase
-        .from('users')
-        .select('*')
-        .eq('email', email.toLowerCase())
-        .single();
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: email.toLowerCase(),
+        password: passwordInput,
+      });
       
-      if (error && error.code !== 'PGRST116') { // PGRST116 is "no rows returned"
-        throw error;
-      }
+      if (error) throw error;
       
-      let userData = data;
-
-      if (!userData) {
-        // Create new user if they don't exist
-        const { data: newUser, error: createError } = await supabase
-          .from('users')
-          .insert([{ email: email.toLowerCase(), id: uuidv4() }])
-          .select()
-          .single();
-        
-        if (createError) throw createError;
-        userData = newUser;
-      }
-      
-      console.log('Auth success:', userData);
-      setUser(userData);
-      localStorage.setItem('pantry_pilot_user', JSON.stringify(userData));
-      if (userData.household_id) {
-        fetchHousehold(userData.household_id);
-      }
+      console.log('Auth success:', data.user);
+      // Household ID might be in metadata or we might need to fetch a mapping later
+      const appUser = {
+        id: data.user.id,
+        email: data.user.email || '',
+        household_id: data.user.user_metadata?.household_id || null
+      };
+      setUser(appUser as User);
     } catch (err: any) {
       console.error('Auth error:', err);
-      setAuthError(err.message || 'Something went wrong during authentication');
+      setAuthError(err.message || 'Invalid login credentials');
     } finally {
       setIsLoggingIn(false);
     }
@@ -1340,6 +1363,15 @@ export default function App() {
                   value={emailInput}
                   onChange={(e) => setEmailInput(e.target.value)}
                   placeholder="you@example.com"
+                  className="w-full px-4 py-3 rounded-xl border border-zinc-100 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all mb-4"
+                />
+                <label className="text-xs font-bold uppercase tracking-wider text-zinc-400 mb-1 block">Password</label>
+                <input 
+                  type="password" 
+                  required
+                  value={passwordInput}
+                  onChange={(e) => setPasswordInput(e.target.value)}
+                  placeholder="••••••••"
                   className="w-full px-4 py-3 rounded-xl border border-zinc-100 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
                 />
               </div>
@@ -1371,6 +1403,7 @@ export default function App() {
             <h2 className="text-xl font-bold text-charcoal">Setup Your Household</h2>
             <button 
               onClick={() => {
+                supabase.auth.signOut();
                 setUser(null);
                 localStorage.removeItem('pantry_pilot_user');
               }}
@@ -1473,9 +1506,6 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-sage-light text-charcoal pb-24">
-      <div className={`w-full py-1 text-[10px] font-bold text-center fixed top-0 left-0 z-[9999] ${import.meta.env.VITE_SUPABASE_URL ? 'bg-emerald-500 text-white' : 'bg-red-500 text-white'}`}>
-        {import.meta.env.VITE_SUPABASE_URL ? "✅ VITE URL FOUND" : "❌ VITE URL MISSING"}
-      </div>
       {/* Header */}
       <header className="sticky top-0 z-30 bg-sage-light/80 backdrop-blur-md border-b border-primary/30 px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -1503,8 +1533,9 @@ export default function App() {
             <Settings size={18} />
           </Button>
           <Button variant="ghost" className="w-10 h-10 p-0 rounded-full" onClick={() => {
+            supabase.auth.signOut();
+            setUser(null);
             localStorage.removeItem('pantry_pilot_user');
-            window.location.reload();
           }}>
             <LogOut size={18} />
           </Button>
