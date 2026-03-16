@@ -42,6 +42,7 @@ import { QRCodeCanvas } from 'qrcode.react';
 import { usePantry } from './hooks/usePantry';
 import { supabase } from './supabaseClient';
 import { CATEGORIES, Category, Item, Location, Zone, OFFICIAL_ICONS, User, Household } from './types';
+import { getRecipeSuggestions } from './services/geminiService';
 // --- Utilities ---
 
 const playClick = () => {
@@ -1143,6 +1144,21 @@ export default function App() {
         throw hError;
       }
 
+      // 1.5 Seed default locations
+      const defaultLocations = [
+        { name: 'Shopping Bags', icon: '🛍️', household_id: newHouseholdId, id: uuidv4() },
+        { name: 'Fridge', icon: '❄️', household_id: newHouseholdId, id: uuidv4() },
+        { name: 'Freezer', icon: '❄️', household_id: newHouseholdId, id: uuidv4() },
+        { name: 'Cupboards', icon: '🥫', household_id: newHouseholdId, id: uuidv4() },
+        { name: 'Other', icon: '📦', household_id: newHouseholdId, id: uuidv4() }
+      ];
+
+      const { error: seedError } = await supabase
+        .from('locations')
+        .insert(defaultLocations);
+      
+      if (seedError) console.error('Failed to seed locations:', seedError);
+
       // 2. Update user metadata AND user table (if exists)
       const { error: metaError } = await supabase.auth.updateUser({
         data: { household_id: newHouseholdId }
@@ -1792,117 +1808,185 @@ export default function App() {
                     <Plus size={14} /> Add Unit
                   </Button>
                 </div>
-                
                 <div className="space-y-4">
                   {state.locations && state.locations.length > 0 ? (
                     <>
                       {/* Hero Card: Shopping Bags */}
                       {(() => {
-                        const shoppingBags = state.locations.find(l => l.name.includes('Shopping Bags'));
+                        const shoppingBags = state.locations.find(l => l.name === 'Shopping Bags');
                         if (!shoppingBags) return null;
                         const locItems = filteredItems.filter(i => {
                           const zone = state.zones?.find(z => z.id === i.zone_id);
                           return zone?.location_id === shoppingBags.id;
                         });
                         return (
-                          <Card 
-                            key={shoppingBags.id}
-                            className="bg-white/5 border-white/10 hover:border-sage/50 transition-all relative overflow-hidden group !p-6 backdrop-blur-md"
-                            onClick={() => {
-                              setSelectedLocationId(shoppingBags.id);
-                              setView('inventory');
-                            }}
-                          >
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-4">
-                                <div className="w-12 h-12 rounded-2xl bg-sage/10 flex items-center justify-center text-2xl group-hover:bg-sage group-hover:text-forest transition-all">
-                                  {shoppingBags.icon || '🛍️'}
+                          <div className="w-full mb-6">
+                            <Card 
+                              key={shoppingBags.id}
+                              className="bg-white/5 border-white/10 hover:border-sage/50 transition-all relative overflow-hidden group !p-6 backdrop-blur-md w-full"
+                              onClick={() => {
+                                setSelectedLocationId(shoppingBags.id);
+                                setView('inventory');
+                              }}
+                            >
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-4">
+                                  <div className="w-14 h-14 rounded-2xl bg-sage/10 flex items-center justify-center text-3xl group-hover:bg-sage group-hover:text-forest transition-all shadow-inner">
+                                    {shoppingBags.icon || '🛍️'}
+                                  </div>
+                                  <div>
+                                    <h4 className="font-bold text-xl text-white">
+                                      {shoppingBags.name}
+                                    </h4>
+                                    <p className="text-sm text-sage/60 font-medium">Unpacking zone • {locItems.length} items</p>
+                                  </div>
                                 </div>
-                                <div>
-                                  <h4 className="font-bold text-lg text-white">
-                                    {shoppingBags.name}
-                                  </h4>
-                                  <p className="text-xs text-sage/60 font-medium">{locItems.length} items to sort</p>
+                                <div className="flex items-center gap-2">
+                                  <button 
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setModalItem(null);
+                                      setModalContext('pantry');
+                                      setSelectedLocationId(shoppingBags.id);
+                                      setIsItemModalOpen(true);
+                                    }}
+                                    className="w-12 h-12 bg-sage text-forest rounded-full flex items-center justify-center shadow-2xl hover:scale-110 active:scale-95 transition-all z-20"
+                                    title="Quick add to Shopping Bags"
+                                  >
+                                    <Plus size={24} />
+                                  </button>
+                                  <ChevronRight size={24} className="text-white/20 group-hover:text-sage transition-colors" />
                                 </div>
                               </div>
-                              <div className="flex items-center gap-2">
+                            </Card>
+                          </div>
+                        );
+                      })()}
+
+                      {/* Prime Units 2x2 Grid */}
+                      <div className="grid grid-cols-2 gap-4">
+                        {state.locations
+                          .filter(l => ['Fridge', 'Freezer', 'Cupboards', 'Other'].includes(l.name))
+                          .sort((a, b) => {
+                            const order = ['Fridge', 'Freezer', 'Cupboards', 'Other'];
+                            return order.indexOf(a.name) - order.indexOf(b.name);
+                          })
+                          .map(loc => {
+                            const locItems = filteredItems.filter(i => {
+                              const zone = state.zones?.find(z => z.id === i.zone_id);
+                              return zone?.location_id === loc.id;
+                            });
+                            
+                            return (
+                              <Card 
+                                key={loc.id} 
+                                className="group cursor-pointer border-white/10 hover:border-sage transition-all relative bg-white/5 !p-4 backdrop-blur-sm h-40 flex flex-col justify-between" 
+                                onClick={() => {
+                                  setSelectedLocationId(loc.id);
+                                  setView('inventory');
+                                }}
+                              >
+                                <div className="flex items-center justify-between mb-2">
+                                  <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-xl group-hover:bg-sage group-hover:text-forest transition-colors">
+                                    {loc.icon || '📦'}
+                                  </div>
+                                  <button 
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setEditingLocation(loc);
+                                      setIsAddingLocation(true);
+                                    }}
+                                    className="p-1.5 text-white/20 hover:text-sage transition-all"
+                                  >
+                                    <Pencil size={14} />
+                                  </button>
+                                </div>
+                                <div>
+                                  <h4 className="font-bold text-base truncate text-white">
+                                    {loc.name}
+                                  </h4>
+                                  <p className="text-xs text-sage/60 font-medium">{locItems.length} items</p>
+                                </div>
                                 <button 
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     setModalItem(null);
                                     setModalContext('pantry');
-                                    setSelectedLocationId(shoppingBags.id);
+                                    setSelectedLocationId(loc.id);
                                     setIsItemModalOpen(true);
                                   }}
-                                  className="w-10 h-10 bg-sage text-forest rounded-full flex items-center justify-center shadow-2xl hover:scale-110 active:scale-95 transition-all z-20"
-                                  title="Quick add to Shopping Bags"
+                                  className="absolute bottom-4 right-4 w-9 h-9 bg-sage text-forest rounded-full flex items-center justify-center shadow-lg hover:scale-110 active:scale-95 transition-all z-20"
+                                  title={`Quick add to ${loc.name}`}
                                 >
-                                  <Plus size={20} />
+                                  <Plus size={18} />
                                 </button>
-                                <ChevronRight size={24} className="text-white/20 group-hover:text-sage transition-colors" />
-                              </div>
-                            </div>
-                          </Card>
-                        );
-                      })()}
-
-                      {/* Other Units Grid */}
-                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                        {state.locations.filter(l => !l.name.includes('Shopping Bags')).map(loc => {
-                          const locItems = filteredItems.filter(i => {
-                            const zone = state.zones?.find(z => z.id === i.zone_id);
-                            return zone?.location_id === loc.id;
-                          });
-                          
-                          if (locItems.length === 0 && (searchQuery || selectedCategory)) return null;
-                          
-                          return (
-                            <Card 
-                              key={loc.id} 
-                              className="group cursor-pointer border-white/10 hover:border-sage transition-all relative bg-white/5 !p-3 backdrop-blur-sm" 
-                              onClick={() => {
-                                setSelectedLocationId(loc.id);
-                                setView('inventory');
-                              }}
-                            >
-                              <div className="flex items-center justify-between mb-2">
-                                <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-lg group-hover:bg-sage group-hover:text-forest transition-colors">
-                                  {loc.icon || '📦'}
-                                </div>
-                                <button 
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setEditingLocation(loc);
-                                    setIsAddingLocation(true);
-                                  }}
-                                  className="p-1 text-white/20 hover:text-sage transition-all"
-                                >
-                                  <Pencil size={12} />
-                                </button>
-                              </div>
-                              <div className="overflow-hidden mb-4">
-                                <h4 className="font-bold text-sm truncate text-white">
-                                  {loc.name.replace(/^[^\w\s]+/, '').replace('Snowflake Freezer', 'Freezer').trim()}
-                                </h4>
-                                <p className="text-[10px] text-sage/60 font-medium">{locItems.length} items</p>
-                              </div>
-                              <button 
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setModalItem(null);
-                                  setModalContext('pantry');
-                                  setSelectedLocationId(loc.id);
-                                  setIsItemModalOpen(true);
-                                }}
-                                className="absolute bottom-2 right-2 w-8 h-8 bg-sage text-forest rounded-full flex items-center justify-center shadow-lg hover:scale-110 active:scale-95 transition-all z-20"
-                                title={`Quick add to ${loc.name}`}
-                              >
-                                <Plus size={16} />
-                              </button>
-                            </Card>
-                          );
-                        })}
+                              </Card>
+                            );
+                          })}
                       </div>
+
+                      {/* Custom Units Section (Any units created by user beyond the defaults) */}
+                      {state.locations.filter(l => !['Shopping Bags', 'Fridge', 'Freezer', 'Cupboards', 'Other'].includes(l.name)).length > 0 && (
+                        <div className="pt-8 space-y-4">
+                          <h4 className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/30">Custom Units</h4>
+                          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                            {state.locations
+                              .filter(l => !['Shopping Bags', 'Fridge', 'Freezer', 'Cupboards', 'Other'].includes(l.name))
+                              .map(loc => {
+                                const locItems = filteredItems.filter(i => {
+                                  const zone = state.zones?.find(z => z.id === i.zone_id);
+                                  return zone?.location_id === loc.id;
+                                });
+                                
+                                return (
+                                  <Card 
+                                    key={loc.id} 
+                                    className="group cursor-pointer border-white/10 hover:border-sage transition-all relative bg-white/5 !p-3 backdrop-blur-sm" 
+                                    onClick={() => {
+                                      setSelectedLocationId(loc.id);
+                                      setView('inventory');
+                                    }}
+                                  >
+                                    <div className="flex items-center justify-between mb-2">
+                                      <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-lg group-hover:bg-sage group-hover:text-forest transition-colors">
+                                        {loc.icon || '📦'}
+                                      </div>
+                                      <button 
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setEditingLocation(loc);
+                                          setIsAddingLocation(true);
+                                        }}
+                                        className="p-1 text-white/20 hover:text-sage transition-all"
+                                      >
+                                        <Pencil size={12} />
+                                      </button>
+                                    </div>
+                                    <div className="overflow-hidden mb-4">
+                                      <h4 className="font-bold text-sm truncate text-white">
+                                        {loc.name}
+                                      </h4>
+                                      <p className="text-[10px] text-sage/60 font-medium">{locItems.length} items</p>
+                                    </div>
+                                    <button 
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setModalItem(null);
+                                        setModalContext('pantry');
+                                        setSelectedLocationId(loc.id);
+                                        setIsItemModalOpen(true);
+                                      }}
+                                      className="absolute bottom-2 right-2 w-8 h-8 bg-sage text-forest rounded-full flex items-center justify-center shadow-lg hover:scale-110 active:scale-95 transition-all z-20"
+                                      title={`Quick add to ${loc.name}`}
+                                    >
+                                      <Plus size={16} />
+                                    </button>
+                                  </Card>
+                                );
+                              })}
+                          </div>
+                        </div>
+                      )}
                     </>
                   ) : (
                     <div className="py-12 border-2 border-dashed border-zinc-100 rounded-3xl flex flex-col items-center justify-center text-center">
