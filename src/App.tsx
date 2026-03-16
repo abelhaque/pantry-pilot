@@ -40,8 +40,12 @@ import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { QRCodeCanvas } from 'qrcode.react';
 import { usePantry } from './hooks/usePantry';
+import { supabase } from './supabaseClient';
 import { CATEGORIES, Category, Item, Location, Zone, OFFICIAL_ICONS, User, Household } from './types';
 import { getRecipeSuggestions } from './services/geminiService';
+
+console.log('DEBUG - URL exists:', !!import.meta.env.VITE_SUPABASE_URL);
+console.log('DEBUG - URL value:', import.meta.env.VITE_SUPABASE_URL); // Log the actual value (obfuscated if needed, but here helpful)
 
 // --- Utilities ---
 
@@ -1011,9 +1015,14 @@ export default function App() {
 
   const fetchHousehold = async (id: string) => {
     try {
-      const res = await fetch(`/api/households/${id}`);
-      if (res.ok) {
-        const data = await res.json();
+      const { data, error } = await supabase
+        .from('households')
+        .select('*')
+        .eq('id', id)
+        .single();
+      
+      if (error) throw error;
+      if (data) {
         setHousehold(data);
       }
     } catch (err) {
@@ -1027,39 +1036,41 @@ export default function App() {
     setIsLoggingIn(true);
     setAuthError(null);
 
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
-
     try {
-      const res = await fetch('/api/auth', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
-        signal: controller.signal
-      });
+      // Direct Supabase lookup for the user
+      const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('email', email.toLowerCase())
+        .single();
       
-      clearTimeout(timeoutId);
-      console.log('Auth response status:', res.status);
-      
-      if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.error || `Server returned ${res.status}`);
+      if (error && error.code !== 'PGRST116') { // PGRST116 is "no rows returned"
+        throw error;
       }
       
-      const data = await res.json();
-      console.log('Auth success:', data);
-      setUser(data);
-      localStorage.setItem('pantry_pilot_user', JSON.stringify(data));
-      if (data.household_id) {
-        fetchHousehold(data.household_id);
+      let userData = data;
+
+      if (!userData) {
+        // Create new user if they don't exist
+        const { data: newUser, error: createError } = await supabase
+          .from('users')
+          .insert([{ email: email.toLowerCase(), id: uuidv4() }])
+          .select()
+          .single();
+        
+        if (createError) throw createError;
+        userData = newUser;
+      }
+      
+      console.log('Auth success:', userData);
+      setUser(userData);
+      localStorage.setItem('pantry_pilot_user', JSON.stringify(userData));
+      if (userData.household_id) {
+        fetchHousehold(userData.household_id);
       }
     } catch (err: any) {
       console.error('Auth error:', err);
-      if (err.name === 'AbortError') {
-        setAuthError('Request timed out. Please try again.');
-      } else {
-        setAuthError(err.message || 'Something went wrong');
-      }
+      setAuthError(err.message || 'Something went wrong during authentication');
     } finally {
       setIsLoggingIn(false);
     }
@@ -1070,15 +1081,28 @@ export default function App() {
     setIsProcessingHousehold(true);
     setHouseholdError(null);
     try {
-      const res = await fetch('/api/households', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, userId: user.id })
-      });
-      if (!res.ok) throw new Error('Failed to create household');
-      const data = await res.json();
-      setHousehold(data);
-      const updatedUser = { ...user, household_id: data.id, household_name: data.name };
+      const newHouseholdId = uuidv4();
+      const inviteCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+
+      // 1. Create household
+      const { data: newHousehold, error: hError } = await supabase
+        .from('households')
+        .insert([{ id: newHouseholdId, name, invite_code: inviteCode }])
+        .select()
+        .single();
+      
+      if (hError) throw hError;
+
+      // 2. Update user with household_id
+      const { error: uError } = await supabase
+        .from('users')
+        .update({ household_id: newHouseholdId })
+        .eq('id', user.id);
+      
+      if (uError) throw uError;
+
+      setHousehold(newHousehold);
+      const updatedUser = { ...user, household_id: newHousehold.id, household_name: newHousehold.name };
       setUser(updatedUser);
       localStorage.setItem('pantry_pilot_user', JSON.stringify(updatedUser));
     } catch (err: any) {
@@ -1093,18 +1117,27 @@ export default function App() {
     setIsProcessingHousehold(true);
     setHouseholdError(null);
     try {
-      const res = await fetch('/api/households/join', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ inviteCode, userId: user.id })
-      });
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || 'Failed to join household');
+      // 1. Find household by invite code
+      const { data: householdToJoin, error: hError } = await supabase
+        .from('households')
+        .select('*')
+        .eq('invite_code', inviteCode.toUpperCase())
+        .single();
+      
+      if (hError || !householdToJoin) {
+        throw new Error('Invalid invite code');
       }
-      const data = await res.json();
-      setHousehold(data);
-      const updatedUser = { ...user, household_id: data.id, household_name: data.name };
+
+      // 2. Update user with household_id
+      const { error: uError } = await supabase
+        .from('users')
+        .update({ household_id: householdToJoin.id })
+        .eq('id', user.id);
+      
+      if (uError) throw uError;
+
+      setHousehold(householdToJoin);
+      const updatedUser = { ...user, household_id: householdToJoin.id, household_name: householdToJoin.name };
       setUser(updatedUser);
       localStorage.setItem('pantry_pilot_user', JSON.stringify(updatedUser));
     } catch (err: any) {
