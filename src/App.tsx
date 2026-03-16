@@ -1473,6 +1473,9 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-sage-light text-charcoal pb-24">
+      <div className={`w-full py-1 text-[10px] font-bold text-center fixed top-0 left-0 z-[9999] ${import.meta.env.VITE_SUPABASE_URL ? 'bg-emerald-500 text-white' : 'bg-red-500 text-white'}`}>
+        {import.meta.env.VITE_SUPABASE_URL ? "✅ VITE URL FOUND" : "❌ VITE URL MISSING"}
+      </div>
       {/* Header */}
       <header className="sticky top-0 z-30 bg-sage-light/80 backdrop-blur-md border-b border-primary/30 px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
