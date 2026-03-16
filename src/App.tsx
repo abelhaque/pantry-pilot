@@ -3664,24 +3664,36 @@ export default function App() {
               <h3 className="text-2xl font-serif font-bold text-charcoal mb-6">
                 {editingLocation ? `Manage ${editingLocation.name}` : 'New Storage Unit'}
               </h3>
-              <form onSubmit={(e: any) => {
+              <form onSubmit={async (e: any) => {
                 e.preventDefault();
-                const name = formLocationName;
-                const icon = formLocationIcon;
+                setIsProcessingHousehold(true);
+                setHouseholdError(null);
+                
+                try {
+                  const name = formLocationName;
+                  const icon = formLocationIcon;
 
-                if (editingLocation) {
-                  dispatch({ 
-                    type: 'UPDATE_LOCATION', 
-                    payload: { id: editingLocation.id, name, icon } 
-                  });
-                } else {
-                  dispatch({ 
-                    type: 'ADD_LOCATION', 
-                    payload: { name, icon } 
-                  });
+                  if (editingLocation) {
+                    await dispatch({ 
+                      type: 'UPDATE_LOCATION', 
+                      payload: { id: editingLocation.id, name, icon } 
+                    });
+                  } else {
+                    await dispatch({ 
+                      type: 'ADD_LOCATION', 
+                      payload: { name, icon } 
+                    });
+                  }
+                  
+                  setIsAddingLocation(false);
+                  setEditingLocation(null);
+                  setFormLocationName('');
+                } catch (err: any) {
+                  console.error('Failed to save unit:', err);
+                  setHouseholdError(err.message || 'Failed to save storage unit');
+                } finally {
+                  setIsProcessingHousehold(false);
                 }
-                setIsAddingLocation(false);
-                setEditingLocation(null);
               }} className="space-y-6">
                 <div>
                   <label className="text-xs font-bold uppercase tracking-wider text-zinc-400 mb-2 block">Unit Name</label>
@@ -3734,24 +3746,42 @@ export default function App() {
                     onClick={() => {
                       setIsAddingLocation(false);
                       setEditingLocation(null);
+                      setFormLocationName('');
                     }}
                   >
                     Cancel
                   </Button>
                   <Button type="submit" variant="primary" className="flex-1">
-                    {editingLocation ? 'Save Changes' : 'Create Unit'}
+                    {isProcessingHousehold ? 'Saving...' : (editingLocation ? 'Save Changes' : 'Create Unit')}
                   </Button>
                 </div>
+
+                {householdError && (
+                  <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl flex items-center gap-2 mt-4">
+                    <AlertTriangle className="text-red-500" size={16} />
+                    <p className="text-[10px] text-red-500 font-bold">{householdError}</p>
+                  </div>
+                )}
 
                 {editingLocation && (editingLocation.name !== '🛍️ Shopping Bags' && editingLocation.name !== 'Shopping Bags') && (
                   <div className="pt-4 border-t border-zinc-100 flex justify-center">
                     <button
                       type="button"
-                      onClick={withFeedback(() => {
-                        if (window.confirm('Are you sure? This will move all items in this unit to "Other".')) {
-                          dispatch({ type: 'DELETE_LOCATION', payload: { id: editingLocation.id } });
-                          setIsAddingLocation(false);
-                          setEditingLocation(null);
+                      onClick={withFeedback(async () => {
+                        if (window.confirm('Are you sure? This will delete this unit and all its configuration.')) {
+                          try {
+                            setIsProcessingHousehold(true);
+                            setHouseholdError(null);
+                            await dispatch({ type: 'DELETE_LOCATION', payload: { id: editingLocation.id } });
+                            setIsAddingLocation(false);
+                            setEditingLocation(null);
+                            setFormLocationName('');
+                          } catch (err: any) {
+                            console.error('Failed to delete unit:', err);
+                            setHouseholdError(err.message || 'Failed to delete storage unit');
+                          } finally {
+                            setIsProcessingHousehold(false);
+                          }
                         }
                       }, 'delete')}
                       className="text-red-400 hover:text-red-600 text-xs font-bold uppercase tracking-widest transition-all"

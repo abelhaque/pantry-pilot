@@ -123,6 +123,36 @@ export function usePantry(householdId: string | null) {
         case 'BULK_TRANSFER_ITEMS':
           await supabase.from('items').update({ zone_id: payload.targetZoneId }).in('id', payload.itemIds);
           break;
+        case 'ADD_LOCATION': {
+          const locationId = uuidv4();
+          const { error: locError } = await supabase.from('locations').insert([{ 
+            ...payload, 
+            household_id: householdId, 
+            id: locationId 
+          }]);
+          if (locError) throw locError;
+          
+          // Auto-create 'Main' zone for the new location
+          const { error: zoneError } = await supabase.from('zones').insert([{
+            id: uuidv4(),
+            name: 'Main',
+            location_id: locationId
+          }]);
+          if (zoneError) throw zoneError;
+          
+          await fetchData();
+          break;
+        }
+        case 'UPDATE_LOCATION':
+          await supabase.from('locations').update(payload).eq('id', payload.id);
+          await fetchData();
+          break;
+        case 'DELETE_LOCATION':
+          // Items and zones should be handled by DB cascade or handled explicitly here
+          // For safety, let's just delete the location and rely on fetch for fresh state
+          await supabase.from('locations').delete().eq('id', payload.id);
+          await fetchData();
+          break;
       }
     } catch (error) {
       console.error(`Error performing action ${type}:`, error);
