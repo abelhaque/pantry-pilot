@@ -17,14 +17,10 @@ export function usePantry(householdId: string | null) {
   const [isSyncing, setIsSyncing] = useState(false);
 
   const fetchData = useCallback(async () => {
-    if (!householdId) {
-      console.warn('fetchData called without householdId');
-      return;
-    }
+    if (!householdId) return;
     setIsSyncing(true);
     
     try {
-      console.log('Initiating Supabase Fetch for Household:', householdId);
       const [
         { data: items, error: itemsError },
         { data: locations, error: locationsError },
@@ -37,14 +33,10 @@ export function usePantry(householdId: string | null) {
         supabase.from('shopping_list').select('*').eq('household_id', householdId)
       ]);
 
-      if (itemsError) console.error('Supabase Error (items):', itemsError);
-      if (locationsError) console.error('Supabase Error (locations):', locationsError);
-      if (zonesError) console.error('Supabase Error (zones):', zonesError);
-      if (shoppingError) console.error('Supabase Error (shopping):', shoppingError);
-
-      console.log('Supabase Data (items):', items);
-      console.log('Supabase Data (locations):', locations);
-      console.log('Supabase Data (shopping_list):', shoppingList);
+      if (itemsError) console.warn('Supabase items error (likely table missing):', itemsError.message);
+      if (locationsError) console.warn('Supabase locations error:', locationsError.message);
+      if (zonesError) console.warn('Supabase zones error:', zonesError.message);
+      if (shoppingError) console.warn('Supabase shopping error:', shoppingError.message);
 
       setState(prev => ({
         ...prev,

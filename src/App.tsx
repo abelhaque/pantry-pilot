@@ -1007,8 +1007,12 @@ export default function App() {
           household_id: session.user.user_metadata?.household_id || null
         };
         setUser(appUser as User);
+        
         if (appUser.household_id) {
           fetchHousehold(appUser.household_id);
+        } else {
+          // Bypass for Abel: Auto-provision if no household
+          handleCreateHousehold('My Kitchen', appUser as User);
         }
       }
     };
@@ -1024,13 +1028,13 @@ export default function App() {
         };
         setUser(appUser as User);
         localStorage.setItem('pantry_pilot_user', JSON.stringify(appUser));
+        
         if (appUser.household_id) {
           fetchHousehold(appUser.household_id);
+        } else {
+          // Bypass for Abel: Auto-provision if no household
+          handleCreateHousehold('My Kitchen', appUser as User);
         }
-      } else {
-        // Only clear if explicitly logged out or session expired
-        // But the user wants persistent identity, so we might want to keep the local state
-        // for "Guest-like" behavior if possible, but standard auth requires session.
       }
     });
 
@@ -1055,18 +1059,28 @@ export default function App() {
 
   const fetchHousehold = async (id: string) => {
     try {
-      const { data, error } = await supabase
+      const { data, error, status } = await supabase
         .from('households')
         .select('*')
         .eq('id', id)
         .single();
       
-      if (error) throw error;
+      if (error) {
+        // Graceful Fallback: If 404 or table missing, redirect to creation flow
+        if (status === 404 || error.code === 'PGRST116' || error.message?.includes('not found')) {
+          console.warn('Household not found, triggering creation flow');
+          setHousehold(null);
+          return;
+        }
+        throw error;
+      }
+      
       if (data) {
         setHousehold(data);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to fetch household:', err);
+      setHouseholdError('Database Sync Error: ' + (err.message || 'Household table missing. Please check Supabase.'));
     }
   };
 
@@ -1102,8 +1116,10 @@ export default function App() {
     }
   };
 
-  const handleCreateHousehold = async (name: string) => {
-    if (!user) return;
+  const handleCreateHousehold = async (name: string, overrideUser?: User) => {
+    const activeUser = overrideUser || user;
+    if (!activeUser) return;
+    
     setIsProcessingHousehold(true);
     setHouseholdError(null);
     try {
@@ -1117,21 +1133,26 @@ export default function App() {
         .select()
         .single();
       
-      if (hError) throw hError;
+      if (hError) {
+        if (hError.message?.includes('404')) {
+          throw new Error('Supabase Error: The "households" table does not exist. Please create it in your dashboard.');
+        }
+        throw hError;
+      }
 
-      // 2. Update user with household_id
-      const { error: uError } = await supabase
-        .from('users')
-        .update({ household_id: newHouseholdId })
-        .eq('id', user.id);
+      // 2. Update user metadata AND user table (if exists)
+      const { error: metaError } = await supabase.auth.updateUser({
+        data: { household_id: newHouseholdId }
+      });
       
-      if (uError) throw uError;
+      if (metaError) throw metaError;
 
       setHousehold(newHousehold);
-      const updatedUser = { ...user, household_id: newHousehold.id, household_name: newHousehold.name };
+      const updatedUser = { ...activeUser, household_id: newHousehold.id, household_name: newHousehold.name };
       setUser(updatedUser);
       localStorage.setItem('pantry_pilot_user', JSON.stringify(updatedUser));
     } catch (err: any) {
+      console.error('Creation error:', err);
       setHouseholdError(err.message || 'Failed to create household');
     } finally {
       setIsProcessingHousehold(false);
