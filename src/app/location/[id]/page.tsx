@@ -147,8 +147,8 @@ export default function LocationReference() {
                             <h1 className="text-6xl font-black tracking-tighter uppercase leading-none">{location.name}</h1>
                         </div>
                         <div className="w-24 h-24 rounded-[36px] bg-white/5 border border-white/10 flex items-center justify-center text-5xl shadow-2xl backdrop-blur-md">
-                            {location.name?.toLowerCase().includes('fridge') ? <Refrigerator size={44} /> : 
-                             location.name?.toLowerCase().includes('freezer') ? <Snowflake size={44} /> : 
+                            {(location.name || '').toLowerCase().includes('fridge') ? <Refrigerator size={44} /> : 
+                             (location.name || '').toLowerCase().includes('freezer') ? <Snowflake size={44} /> : 
                              <Archive size={44} />}
                         </div>
                     </div>

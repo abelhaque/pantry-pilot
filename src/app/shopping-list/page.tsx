@@ -46,7 +46,11 @@ const CATEGORY_ORDER = CATEGORIES.map(c => c.name)
 // Haptic + sound (ported from fallback)
 const playSuccess = () => {
     try {
-        const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)()
+        if (typeof window === 'undefined') return
+        const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext
+        if (!AudioContextClass) return
+        
+        const audioCtx = new AudioContextClass()
         const osc = audioCtx.createOscillator()
         const gain = audioCtx.createGain()
         osc.type = 'sine'
@@ -56,7 +60,14 @@ const playSuccess = () => {
         gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1)
         osc.connect(gain); gain.connect(audioCtx.destination)
         osc.start(); osc.stop(audioCtx.currentTime + 0.1)
-    } catch (e) {}
+        
+        // Handle browser's auto-play policy
+        if (audioCtx.state === 'suspended') {
+            audioCtx.resume()
+        }
+    } catch (e) {
+        console.warn('Audio feedback failed:', e)
+    }
 }
 
 // --- Inline components ported from fallback ---

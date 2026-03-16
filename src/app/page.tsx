@@ -135,9 +135,10 @@ export default function Dashboard() {
     const shoppingList = (household as any)?.shoppingList || []
     const toBuyCount = (shoppingList?.filter((i: any) => !i.isPurchased) || []).length
 
-    const lowStockCount = allItems.filter(item => item.quantity <= (item.low_stock_threshold || 1)).length
+    const low_threshold = (item: any) => item.low_stock_threshold ?? 1
+    const lowStockCount = allItems.filter(item => (item.quantity || 0) <= low_threshold(item)).length
 
-    const shoppingBags = household?.locations?.find(l => l.name?.toLowerCase().includes('shopping bags'))
+    const shoppingBags = household?.locations?.find(l => (l.name || '').toLowerCase().includes('shopping bags'))
     const shoppingBagsItems = shoppingBags?.zones?.flatMap(z => z.items || []) || []
     
     // Group by Aisle (Category)
@@ -167,7 +168,8 @@ export default function Dashboard() {
 
     // --- Core Grid Initialization ---
     const coreGrid = CORE_UNITS_CONFIG.map(config => {
-        const existing = household?.locations?.find(l => l.name?.toLowerCase() === config.name?.toLowerCase())
+        const configName = (config.name || '').toLowerCase()
+        const existing = household?.locations?.find(l => (l.name || '').toLowerCase() === configName)
         if (existing) {
             return { ...existing, icon: config.icon }
         }
@@ -176,8 +178,8 @@ export default function Dashboard() {
 
     const customLocations = household?.locations?.filter(l => 
         l.name && 
-        !l.name.toLowerCase().includes('shopping bags') &&
-        !CORE_UNITS_CONFIG.some(c => c.name?.toLowerCase() === l.name?.toLowerCase())
+        !(l.name || '').toLowerCase().includes('shopping bags') &&
+        !CORE_UNITS_CONFIG.some(c => (c.name || '').toLowerCase() === (l.name || '').toLowerCase())
     ) || []
 
     const handleCreateLocation = async (e: React.FormEvent) => {

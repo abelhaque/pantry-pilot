@@ -34,7 +34,19 @@ export function HouseholdProvider({ children }: { children: React.ReactNode }) {
 
             const data = await res.json()
             if (res.ok && data.household) {
-                setHousehold(data.household)
+                // Pre-sanitize location names to ensure string safety in UI
+                const sanitized = {
+                    ...data.household,
+                    locations: (data.household.locations || []).map((l: any) => ({
+                        ...l,
+                        name: l.name || 'Unnamed Location',
+                        zones: (l.zones || []).map((z: any) => ({
+                            ...z,
+                            name: z.name || 'Unnamed Zone'
+                        }))
+                    }))
+                }
+                setHousehold(sanitized)
             } else {
                 console.warn('No household returned from /api/init or fetch failed', data)
             }
