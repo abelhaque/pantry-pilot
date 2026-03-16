@@ -39,14 +39,14 @@ export default function LocationReference() {
 
     // --- Data Calculations ---
     const allItems = useMemo(() => {
-        if (!location || !hydrated) return []
+        if (!location) return []
         const zones = location.zones || []
         let items = zones.flatMap(z => (z.items || []).map(i => ({ ...i, zoneName: z.name, zoneId: z.id })))
         if (activeZoneFilter !== 'all') {
             items = items.filter(i => i.zoneId === activeZoneFilter)
         }
         return items
-    }, [location, activeZoneFilter, hydrated])
+    }, [location, activeZoneFilter])
 
     // Aisle Grouping logic
     const aisleGroups = useMemo(() => {

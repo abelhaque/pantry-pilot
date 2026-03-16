@@ -19,9 +19,6 @@ export default function PantryPage() {
     const router = useRouter()
     const { household, isLoading } = useHousehold()
     const [searchQuery, setSearchQuery] = useState('')
-    const [hydrated, setHydrated] = useState(false)
-
-    useEffect(() => { setHydrated(true) }, [])
 
     // --- Filtering Logic ---
     const allItems = useMemo(() => {
@@ -79,7 +76,7 @@ export default function PantryPage() {
         }))
     }, [filteredItems])
 
-    if (isLoading || !hydrated) {
+    if (isLoading) {
         return <div className="flex items-center justify-center min-h-screen text-[#1A2119] font-bold">Loading Pantry...</div>
     }
 

@@ -26,19 +26,16 @@ export default function CookHub() {
   const { household, isLoading } = useHousehold()
   const [selectedDate, setSelectedDate] = useState(new Date())
   const [mealPlans, setMealPlans] = useState<MealPlan[]>([])
-  
-  const [hydrated, setHydrated] = useState(false)
-  useEffect(() => { setHydrated(true) }, [])
 
   const fetchMealPlans = async () => {
-    if (!household || !hydrated) return
+    if (!household) return
     const res = await fetch(`/api/meal-plans?householdId=${household.id}&date=${selectedDate.toISOString()}`)
     if (res.ok) setMealPlans(await res.json())
   }
 
   useEffect(() => {
-    if (hydrated) fetchMealPlans()
-  }, [household, selectedDate, hydrated])
+    fetchMealPlans()
+  }, [household, selectedDate])
 
   const handleAddPlan = async (slot: string) => {
     const recipeName = prompt(`What's for ${slot}?`)
@@ -57,11 +54,11 @@ export default function CookHub() {
   }
 
   // Mock data for the horizontal carousel
-  const dates = hydrated ? Array.from({ length: 7 }, (_, i) => {
+  const dates = Array.from({ length: 7 }, (_, i) => {
     const d = new Date()
     d.setDate(d.getDate() + i - 3)
     return d
-  }) : []
+  })
 
   const slots = ['Breakfast', 'Lunch', 'Dinner', 'Snacks']
 

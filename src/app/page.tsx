@@ -95,7 +95,6 @@ const StorageCard = ({
 export default function Dashboard() {
     const { household, isLoading, createLocation, createZone } = useHousehold()
     const router = useRouter()
-    const [hydrated, setHydrated] = useState(false)
     
     // --- UI State ---
     const [isAddingLocation, setIsAddingLocation] = useState(false)
@@ -106,10 +105,8 @@ export default function Dashboard() {
     const [newZoneName, setNewZoneName] = useState('')
     const [expiringSoonCount, setExpiringSoonCount] = useState(0)
 
-    useEffect(() => { setHydrated(true) }, [])
-
     useEffect(() => {
-        if (!household || !hydrated) return
+        if (!household) return
         const items = (household.locations || []).flatMap(l => (l.zones || []).flatMap(z => z.items || [])) || []
         const count = items.filter(item => {
             const expiry = item.expiry_date || item.expiry
@@ -119,9 +116,9 @@ export default function Dashboard() {
             return new Date(expiry) <= threeDaysFromNow
         }).length
         setExpiringSoonCount(count)
-    }, [household, hydrated])
+    }, [household])
 
-    if (isLoading || !hydrated) {
+    if (isLoading) {
         return (
             <div className="flex items-center justify-center min-h-screen bg-[#F9F7F2]">
                 <div className="w-8 h-8 border-4 border-[#2C3A2B] border-t-transparent rounded-full animate-spin"></div>

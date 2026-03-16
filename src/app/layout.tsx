@@ -1,8 +1,7 @@
 import "./globals.css";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
-import { HouseholdProvider } from "@/providers/HouseholdProvider";
-import { Navbar } from "@/components/Navbar";
+import { ClientStabilityProvider } from "@/providers/ClientStabilityProvider";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -21,16 +20,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className={inter.className}>
-        <HouseholdProvider>
-          <Navbar />
-          <div className="min-h-screen pb-24">
-            {children}
-          </div>
-        </HouseholdProvider>
+    <html lang="en" suppressHydrationWarning>
+      <body className={inter.className} suppressHydrationWarning>
+        <ClientStabilityProvider>
+          {children}
+        </ClientStabilityProvider>
       </body>
     </html>
   );
 }
-

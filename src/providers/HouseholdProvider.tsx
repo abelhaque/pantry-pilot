@@ -33,14 +33,13 @@ export function HouseholdProvider({ children }: { children: React.ReactNode }) {
             })
 
             const data = await res.json()
-            if (data.household) {
+            if (res.ok && data.household) {
                 setHousehold(data.household)
             } else {
-                // AUTH BYPASS: No redirect. Just log — the API should always return a household.
-                console.warn('No household returned from /api/init', data)
+                console.warn('No household returned from /api/init or fetch failed', data)
             }
         } catch (error) {
-            console.error('Failed to fetch household', error)
+            console.error('Failed to fetch household:', error)
         } finally {
             setIsLoading(false)
         }

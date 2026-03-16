@@ -99,9 +99,6 @@ export default function ShoppingList() {
     const [isStoreSortingEnabled, setIsStoreSortingEnabled] = useState(false)
     const [selectedStoreFilter, setSelectedStoreFilter] = useState<string | null>(null)
     const [isLoading, setIsLoading] = useState(true)
-    const [hydrated, setHydrated] = useState(false)
-
-    useEffect(() => { setHydrated(true) }, [])
 
     const fetchList = async () => {
         if (!household?.id) return
