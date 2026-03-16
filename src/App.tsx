@@ -1087,6 +1087,14 @@ export default function App() {
       
       setAuthError('Check your email for the magic link!');
     } catch (err: any) {
+      // AbortError can happen due to React Strict Mode double-render or fast navigation
+      // If we got here, the request was either sent or aborted.
+      // We ignore AbortErrors specifically as they don't represent a failure to the user.
+      if (err.name === 'AbortError' || err.message?.includes('AbortError')) {
+        setAuthError('Check your email for the magic link!');
+        return;
+      }
+      
       console.error('Auth error:', err);
       setAuthError(err.message || 'Failed to send magic link');
     } finally {
