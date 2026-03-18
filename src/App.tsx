@@ -638,12 +638,19 @@ import { mapOpenFoodFactsCategory } from './utils/categoryMapper';
 
 // --- Main App ---
 
+const STRICT_HOUSEHOLD_ID = '0ff3dd01-23f5-4efc-9092-d22fb7217406';
+
 export default function App() {
-  const [user, setUser] = useState<User | null>(() => {
-    const saved = localStorage.getItem('pantry_pilot_user');
-    return saved ? JSON.parse(saved) : null;
+  const [user, setUser] = useState<User | null>(() => ({
+    id: 'placeholder-user-id',
+    email: 'user@example.com',
+    household_id: STRICT_HOUSEHOLD_ID
+  }));
+  const [household, setHousehold] = useState<Household | null>({
+    id: STRICT_HOUSEHOLD_ID,
+    name: 'My Home',
+    owner_id: 'placeholder-user-id'
   });
-  const [household, setHousehold] = useState<Household | null>(null);
   const [isHouseholdSettingsOpen, setIsHouseholdSettingsOpen] = useState(false);
   const [onboardingStep, setOnboardingStep] = useState<'choice' | 'create' | 'join'>('choice');
   const [householdError, setHouseholdError] = useState<string | null>(null);
@@ -657,6 +664,7 @@ export default function App() {
   const [modalItem, setModalItem] = useState<any>(null);
   const [isAddingLocation, setIsAddingLocation] = useState(false);
   const [isAddingZone, setIsAddingZone] = useState(false);
+
   const [selectedItemIds, setSelectedItemIds] = useState<Set<string>>(new Set());
   const [isUnpackMenuOpen, setIsUnpackMenuOpen] = useState(false);
   const [unpackSuccessMessage, setUnpackSuccessMessage] = useState<string | null>(null);
@@ -1028,68 +1036,8 @@ export default function App() {
     return null;
   };
 
-  // Official Supabase Auth Session Tracking
-  useEffect(() => {
-    const initAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user) {
-        // Map Auth User to our App User type
-        const appUser = {
-          id: session.user.id,
-          email: session.user.email || '',
-          household_id: session.user.user_metadata?.household_id || null
-        };
-        setUser(appUser as User);
-        console.log('INITIAL AUTH SESSION:', appUser);
-        
-        if (appUser.household_id) {
-          fetchHousehold(appUser.household_id);
-        } else if (!isCreatingHouseholdRef.current) {
-          // Bypass for Abel: Auto-provision if no household
-          handleCreateHousehold("Abel's Kitchen", appUser as User);
-        }
-      }
-    };
-
-    initAuth();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session?.user) {
-        const appUser = {
-          id: session.user.id,
-          email: session.user.email || '',
-          household_id: session.user.user_metadata?.household_id || null
-        };
-        setUser(appUser as User);
-        localStorage.setItem('pantry_pilot_user', JSON.stringify(appUser));
-        
-        if (appUser.household_id) {
-          fetchHousehold(appUser.household_id);
-        } else if (!isCreatingHouseholdRef.current) {
-          // Bypass for Abel: Auto-provision if no household
-          handleCreateHousehold("Abel's Kitchen", appUser as User);
-        }
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  useEffect(() => {
-    // Legacy session sync (can be removed later)
-    const savedUser = localStorage.getItem('pantry_pilot_user');
-    if (savedUser && !user) {
-      try {
-        const parsedUser = JSON.parse(savedUser);
-        setUser(parsedUser);
-        if (parsedUser.household_id) {
-          fetchHousehold(parsedUser.household_id);
-        }
-      } catch (e) {
-        localStorage.removeItem('pantry_pilot_user');
-      }
-    }
-  }, []);
+  // --- STRICT MODE: AUTH & ONBOARDING REMOVED ---
+  // All dynamic detection of households is disabled.
 
   const fetchHousehold = async (id: string) => {
     try {
@@ -3480,13 +3428,28 @@ export default function App() {
 
                   let zoneId = formData.get('zoneId') as string;
                   
-                  // Auto-fetch 'Main' zone if none provided (Requirement #2)
+                  // STRICT MODE: Zone Fallback (Requirement #2)
                   if (!zoneId && modalContext === 'pantry') {
-                    const fallbackLoc = state.locations.find(l => l.name !== '🛍️ Shopping Bags' && l.name !== 'Shopping Bags');
-                    if (fallbackLoc) {
-                      const mainZone = state.zones.find(z => z.location_id === fallbackLoc.id && z.name === 'Main') || 
-                                       state.zones.find(z => z.location_id === fallbackLoc.id);
+                    // 1. Try to find 'Main' zone for the currently selected location
+                    const currentLoc = selectedLocationId ? state.locations.find(l => l.id === selectedLocationId) : null;
+                    if (currentLoc) {
+                      const mainZone = state.zones.find(z => z.location_id === currentLoc.id && z.name === 'Main');
                       if (mainZone) zoneId = mainZone.id;
+                    }
+
+                    // 2. If still no zone, find the first non-bag location's 'Main' zone
+                    if (!zoneId) {
+                      const firstUnit = state.locations.find(l => l.name !== '🛍️ Shopping Bags' && l.name !== 'Shopping Bags');
+                      if (firstUnit) {
+                        const mainZone = state.zones.find(z => z.location_id === firstUnit.id && z.name === 'Main');
+                        if (mainZone) zoneId = mainZone.id;
+                      }
+                    }
+
+                    // 3. Last resort check
+                    if (!zoneId) {
+                      window.alert('STRICT MODE ERROR: No storage zone found. Please create a Storage Unit first.');
+                      return;
                     }
                   }
 
