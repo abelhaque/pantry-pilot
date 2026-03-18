@@ -160,7 +160,7 @@ export function usePantry(_ignoredHouseholdId: string | null) {
           if (error) window.alert('Update Shopping Error: ' + error.message);
           break;
         }
-        }
+
         case 'DELETE_SHOPPING_ITEM': {
           const { error } = await supabase.from('shopping_list').delete().eq('id', payload.id);
           if (error) window.alert('Delete Shopping Error: ' + error.message);
