@@ -3,7 +3,12 @@ import { PantryState, Item, Location, Zone } from '../types';
 import { supabase } from '../supabaseClient';
 import { v4 as uuidv4 } from 'uuid';
 
+const FALLBACK_HOUSEHOLD_ID = '0ff3dd01-23f5-4efc-9092-d22fb7217406';
+
 export function usePantry(householdId: string | null) {
+  // Use the provided householdId OR the hardcoded force-linked ID if unsure
+  const currentHouseholdId = householdId || FALLBACK_HOUSEHOLD_ID;
+
   const [state, setState] = useState<PantryState>({
     locations: [],
     zones: [],
@@ -18,15 +23,14 @@ export function usePantry(householdId: string | null) {
 
   const fetchData = useCallback(async () => {
     // Explicitly log the householdId we are using for the fetch
-    console.log('Fetching data for Household ID:', householdId);
+    console.log('Fetching data for Household ID:', currentHouseholdId);
     setIsSyncing(true);
     
     try {
-      // If we don't have a householdId yet, fetch everything as a fallback
-      // This ensures that even if local identity is lost, the user can see public/invited data
-      const itemsQuery = householdId ? supabase.from('items').select('*').eq('household_id', householdId) : supabase.from('items').select('*');
-      const locationsQuery = householdId ? supabase.from('locations').select('*').eq('household_id', householdId) : supabase.from('locations').select('*');
-      const shoppingQuery = householdId ? supabase.from('shopping_list').select('*').eq('household_id', householdId) : supabase.from('shopping_list').select('*');
+      // Use currentHouseholdId for all queries
+      const itemsQuery = supabase.from('items').select('*').eq('household_id', currentHouseholdId);
+      const locationsQuery = supabase.from('locations').select('*').eq('household_id', currentHouseholdId);
+      const shoppingQuery = supabase.from('shopping_list').select('*').eq('household_id', currentHouseholdId);
 
       const [
         { data: items, error: itemsError },
@@ -65,45 +69,53 @@ export function usePantry(householdId: string | null) {
     } finally {
       setIsSyncing(false);
     }
-  }, [householdId]);
+  }, [currentHouseholdId]);
 
   useEffect(() => {
-    if (!householdId) return;
+    if (!currentHouseholdId) return;
 
     fetchData();
 
     // Set up Realtime subscriptions
     const itemsSubscription = supabase
       .channel('pantry-changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'items', filter: `household_id=eq.${householdId}` }, () => fetchData())
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'locations', filter: `household_id=eq.${householdId}` }, () => fetchData())
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'shopping_list', filter: `household_id=eq.${householdId}` }, () => fetchData())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'items', filter: `household_id=eq.${currentHouseholdId}` }, () => fetchData())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'locations', filter: `household_id=eq.${currentHouseholdId}` }, () => fetchData())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'shopping_list', filter: `household_id=eq.${currentHouseholdId}` }, () => fetchData())
       .subscribe();
 
     return () => {
       supabase.removeChannel(itemsSubscription);
     };
-  }, [householdId, fetchData]);
+  }, [currentHouseholdId, fetchData]);
 
   const dispatch = useCallback(async (action: { type: string; payload: any }) => {
-    if (!householdId) return;
+    if (!currentHouseholdId) return;
 
     const { type, payload } = action;
     
     try {
       switch (type) {
-        case 'ADD_ITEM':
-          await supabase.from('items').insert([{ ...payload, household_id: householdId, id: payload.id || uuidv4() }]);
+        case 'ADD_ITEM': {
+          const newItem = { ...payload, household_id: currentHouseholdId, id: payload.id || uuidv4() };
+          console.log('DEBUG [ADD_ITEM]: Adding item to household_id:', currentHouseholdId, newItem);
+          const { error } = await supabase.from('items').insert([newItem]);
+          if (error) console.error('DEBUG [ADD_ITEM] API ERROR:', error);
           break;
+        }
         case 'UPDATE_ITEM':
           await supabase.from('items').update(payload).eq('id', payload.id);
           break;
         case 'DELETE_ITEM':
           await supabase.from('items').delete().eq('id', payload.id);
           break;
-        case 'ADD_TO_SHOPPING':
-          await supabase.from('shopping_list').insert([{ ...payload, household_id: householdId, id: payload.id || uuidv4() }]);
+        case 'ADD_TO_SHOPPING': {
+          const newShoppingItem = { ...payload, household_id: currentHouseholdId, id: payload.id || uuidv4() };
+          console.log('DEBUG [ADD_TO_SHOPPING]: Adding item to household_id:', currentHouseholdId, newShoppingItem);
+          const { error } = await supabase.from('shopping_list').insert([newShoppingItem]);
+          if (error) console.error('DEBUG [ADD_TO_SHOPPING] API ERROR:', error);
           break;
+        }
         case 'UPDATE_SHOPPING_ITEM':
           await supabase.from('shopping_list').update(payload).eq('id', payload.id);
           break;
@@ -114,7 +126,7 @@ export function usePantry(householdId: string | null) {
           await supabase.from('shopping_list').update({ purchased: 1 }).eq('id', payload.id);
           break;
         case 'CLEAR_PURCHASED':
-          await supabase.from('shopping_list').delete().eq('purchased', 1).eq('household_id', householdId);
+          await supabase.from('shopping_list').delete().eq('purchased', 1).eq('household_id', currentHouseholdId);
           await fetchData();
           break;
         case 'TRANSFER_ITEM':
@@ -127,7 +139,7 @@ export function usePantry(householdId: string | null) {
           const locationId = uuidv4();
           const { error: locError } = await supabase.from('locations').insert([{ 
             ...payload, 
-            household_id: householdId, 
+            household_id: currentHouseholdId, 
             id: locationId 
           }]);
           if (locError) throw locError;
@@ -157,8 +169,9 @@ export function usePantry(householdId: string | null) {
     } catch (error) {
       console.error(`Error performing action ${type}:`, error);
     }
-  }, [householdId, fetchData]);
+  }, [currentHouseholdId, fetchData]);
 
   return { state, isConnected, isSyncing, refresh: fetchData, dispatch };
 }
+
 
