@@ -98,12 +98,51 @@ export function usePantry(_ignoredHouseholdId: string | null) {
     try {
       switch (type) {
         case 'ADD_ITEM': {
+          let zoneId = payload.zone_id;
+          
+          if (!zoneId) {
+            console.log('STRICT MODE: No zone_id provided, fetching "Main" zone fallback...');
+            // 1. Find the first available location for this household
+            const { data: locs } = await supabase
+              .from('locations')
+              .select('id, name')
+              .eq('household_id', currentHouseholdId)
+              .limit(1);
+              
+            if (locs && locs[0]) {
+              // 2. Find 'Main' zone for that location
+              const { data: zones } = await supabase
+                .from('zones')
+                .select('id')
+                .eq('location_id', locs[0].id)
+                .eq('name', 'Main')
+                .limit(1);
+                
+              if (zones && zones[0]) {
+                zoneId = zones[0].id;
+              } else {
+                // 3. Fallback to ANY zone for that location
+                const { data: anyZones } = await supabase
+                  .from('zones')
+                  .select('id')
+                  .eq('location_id', locs[0].id)
+                  .limit(1);
+                if (anyZones && anyZones[0]) zoneId = anyZones[0].id;
+              }
+            }
+          }
+
+          if (!zoneId) {
+            window.alert('Visibility Error: No storage zone found. Please create a Storage Unit in settings first.');
+            break;
+          }
+
           const rawItem = { 
             id: payload.id || uuidv4(),
             name: payload.name, 
             quantity: payload.quantity,
             household_id: currentHouseholdId, 
-            zone_id: payload.zone_id,
+            zone_id: zoneId,
             category: payload.storageCategory || payload.category || 'Other',
             icon: payload.icon || '📦',
             unit_type: payload.unit_type || 'items',
@@ -118,6 +157,7 @@ export function usePantry(_ignoredHouseholdId: string | null) {
           if (error) window.alert('Add Item Error: ' + error.message);
           break;
         }
+
         case 'UPDATE_ITEM': {
           const cleanUpdate = cleanPayload(payload);
           // Force category mapping if it's renamed in payload

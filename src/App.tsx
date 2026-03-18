@@ -2704,7 +2704,7 @@ export default function App() {
                     return Object.keys(storeGroups).sort().map(storeName => {
                       const storeItems = storeGroups[storeName];
                       const aisleGroups = storeItems.reduce((acc, item) => {
-                        const cat = item.shoppingCategory || 'Other';
+                        const cat = item.shoppingCategory || item.category || 'Uncategorized';
                         if (!acc[cat]) acc[cat] = [];
                         acc[cat].push(item);
                         return acc;
@@ -2799,7 +2799,7 @@ export default function App() {
                   } else {
                     // Group by Category
                     const catGroups = filteredItems.reduce((acc, item) => {
-                      const cat = item.shoppingCategory || 'Other';
+                      const cat = item.shoppingCategory || item.category || 'Uncategorized';
                       if (!acc[cat]) acc[cat] = [];
                       acc[cat].push(item);
                       return acc;
