@@ -5,6 +5,18 @@ import { v4 as uuidv4 } from 'uuid';
 
 const STRICT_HOUSEHOLD_ID = '0ff3dd01-23f5-4efc-9092-d22fb7217406';
 
+// Utility to remove any keys that are undefined, null, or empty strings
+const cleanPayload = (obj: any) => {
+  const cleaned: any = {};
+  Object.keys(obj).forEach(key => {
+    const val = obj[key];
+    if (val !== undefined && val !== null && val !== '') {
+      cleaned[key] = val;
+    }
+  });
+  return cleaned;
+};
+
 export function usePantry(_ignoredHouseholdId: string | null) {
   // STRICT MODE: Hard-coded force-linked ID. No dynamic detection.
   const currentHouseholdId = STRICT_HOUSEHOLD_ID;
@@ -86,26 +98,32 @@ export function usePantry(_ignoredHouseholdId: string | null) {
     try {
       switch (type) {
         case 'ADD_ITEM': {
-          const newItem = { 
-            ...payload, 
-            household_id: currentHouseholdId, 
+          const rawItem = { 
             id: payload.id || uuidv4(),
+            name: payload.name, 
+            quantity: payload.quantity,
+            household_id: currentHouseholdId, 
+            zone_id: payload.zone_id,
             category: payload.storageCategory || payload.category || 'Other',
             icon: payload.icon || '📦',
-            unit_type: payload.unit_type || 'items'
+            unit_type: payload.unit_type || 'items',
+            expiry_date: payload.expiry_date,
+            low_stock_threshold: payload.low_stock_threshold
           };
-          console.log('STRICT MODE [ADD_ITEM]: Adding item:', newItem);
-          const { error } = await supabase.from('items').insert([newItem]);
+          
+          const cleanItem = cleanPayload(rawItem);
+          console.log('STRICT MODE [ADD_ITEM] (Clean):', cleanItem);
+          
+          const { error } = await supabase.from('items').insert([cleanItem]);
           if (error) window.alert('Add Item Error: ' + error.message);
           break;
         }
         case 'UPDATE_ITEM': {
-          const updateData = {
-            ...payload,
-            category: payload.storageCategory || payload.category,
-            icon: payload.icon || '📦'
-          };
-          const { error } = await supabase.from('items').update(updateData).eq('id', payload.id);
+          const cleanUpdate = cleanPayload(payload);
+          // Force category mapping if it's renamed in payload
+          if (payload.storageCategory) cleanUpdate.category = payload.storageCategory;
+          
+          const { error } = await supabase.from('items').update(cleanUpdate).eq('id', payload.id);
           if (error) window.alert('Update Item Error: ' + error.message);
           break;
         }
@@ -115,24 +133,33 @@ export function usePantry(_ignoredHouseholdId: string | null) {
           break;
         }
         case 'ADD_TO_SHOPPING': {
-          const newShoppingItem = { 
-            ...payload, 
-            household_id: currentHouseholdId, 
+          const rawShoppingItem = { 
             id: payload.id || uuidv4(),
+            name: payload.name,
+            quantity: payload.quantity,
+            household_id: currentHouseholdId, 
             category: payload.shoppingCategory || payload.category || 'Other',
             icon: payload.icon || '📦',
-            unit_type: payload.unit_type || 'items'
+            unit_type: payload.unit_type || 'items',
+            store: payload.store,
+            item_id: payload.item_id // Optional reference
           };
-          console.log('STRICT MODE [ADD_TO_SHOPPING]: Adding item:', newShoppingItem);
-          const { error } = await supabase.from('shopping_list').insert([newShoppingItem]);
+          
+          const cleanShoppingItem = cleanPayload(rawShoppingItem);
+          console.log('STRICT MODE [ADD_TO_SHOPPING] (Clean):', cleanShoppingItem);
+          
+          const { error } = await supabase.from('shopping_list').insert([cleanShoppingItem]);
           if (error) window.alert('Add Shopping Item Error: ' + error.message);
           break;
         }
-
         case 'UPDATE_SHOPPING_ITEM': {
-          const { error } = await supabase.from('shopping_list').update(payload).eq('id', payload.id);
+          const cleanUpdate = cleanPayload(payload);
+          if (payload.shoppingCategory) cleanUpdate.category = payload.shoppingCategory;
+          
+          const { error } = await supabase.from('shopping_list').update(cleanUpdate).eq('id', payload.id);
           if (error) window.alert('Update Shopping Error: ' + error.message);
           break;
+        }
         }
         case 'DELETE_SHOPPING_ITEM': {
           const { error } = await supabase.from('shopping_list').delete().eq('id', payload.id);
