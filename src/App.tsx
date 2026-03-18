@@ -3384,10 +3384,10 @@ export default function App() {
                 }
 
                 const categoryObj = CATEGORIES.find(c => c.name === storageCategory);
-                const icon = categoryObj?.icon || '📦';
+                const icon = categoryObj?.icon || modalItem?.icon || '📦';
                 const name = formData.get('name') as string;
                 const quantity = parseFloat(formData.get('quantity') as string) || 0;
-                const unit_type = formData.get('unitType') as string;
+                const unit_type = (formData.get('unitType') as string) || 'items';
 
                 if (modalContext === 'shopping') {
                   if (modalItem?.id && !modalItem.purchased) {
@@ -3482,6 +3482,7 @@ export default function App() {
 
                 setIsItemModalOpen(false);
                 setModalItem(null);
+
               }} className="space-y-6">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="col-span-2">

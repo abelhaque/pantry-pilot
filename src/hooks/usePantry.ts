@@ -86,14 +86,26 @@ export function usePantry(_ignoredHouseholdId: string | null) {
     try {
       switch (type) {
         case 'ADD_ITEM': {
-          const newItem = { ...payload, household_id: currentHouseholdId, id: payload.id || uuidv4() };
+          const newItem = { 
+            ...payload, 
+            household_id: currentHouseholdId, 
+            id: payload.id || uuidv4(),
+            category: payload.storageCategory || payload.category || 'Other',
+            icon: payload.icon || '📦',
+            unit_type: payload.unit_type || 'items'
+          };
           console.log('STRICT MODE [ADD_ITEM]: Adding item:', newItem);
           const { error } = await supabase.from('items').insert([newItem]);
           if (error) window.alert('Add Item Error: ' + error.message);
           break;
         }
         case 'UPDATE_ITEM': {
-          const { error } = await supabase.from('items').update(payload).eq('id', payload.id);
+          const updateData = {
+            ...payload,
+            category: payload.storageCategory || payload.category,
+            icon: payload.icon || '📦'
+          };
+          const { error } = await supabase.from('items').update(updateData).eq('id', payload.id);
           if (error) window.alert('Update Item Error: ' + error.message);
           break;
         }
@@ -103,12 +115,20 @@ export function usePantry(_ignoredHouseholdId: string | null) {
           break;
         }
         case 'ADD_TO_SHOPPING': {
-          const newShoppingItem = { ...payload, household_id: currentHouseholdId, id: payload.id || uuidv4() };
+          const newShoppingItem = { 
+            ...payload, 
+            household_id: currentHouseholdId, 
+            id: payload.id || uuidv4(),
+            category: payload.shoppingCategory || payload.category || 'Other',
+            icon: payload.icon || '📦',
+            unit_type: payload.unit_type || 'items'
+          };
           console.log('STRICT MODE [ADD_TO_SHOPPING]: Adding item:', newShoppingItem);
           const { error } = await supabase.from('shopping_list').insert([newShoppingItem]);
           if (error) window.alert('Add Shopping Item Error: ' + error.message);
           break;
         }
+
         case 'UPDATE_SHOPPING_ITEM': {
           const { error } = await supabase.from('shopping_list').update(payload).eq('id', payload.id);
           if (error) window.alert('Update Shopping Error: ' + error.message);
